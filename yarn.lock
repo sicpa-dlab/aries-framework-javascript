@@ -2144,23 +2144,44 @@
   resolved "https://registry.yarnpkg.com/@react-native/polyfills/-/polyfills-1.0.0.tgz#05bb0031533598f9458cf65a502b8df0eecae780"
   integrity sha512-0jbp4RxjYopTsIdLl+/Fy2TiwVYHy4mgeu07DG4b/LyM0OS/+lPP5c9sbnt/AMlnF6qz2JRZpPpGw1eMNS6A4w==
 
-"@sicpa-dlab/didcomm-react-native@^0.0.2":
-  version "0.0.2"
-  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/didcomm-react-native/0.0.2/594e9dd51deb6bf8df65f2c4d956c945a861be614347178c3b8f5dbc4c8155f5#93106dd59cc7e2ea418bdf9f5876c696bcf13215"
-  integrity sha512-BVfMNwoqmHhjBxdDAjBZ7ys1Mt+RJpVNn6YRaSfJAgmOF3wgSLMDsfb32Ki+vyvH3KW6YCeKvWK/3y/o73jo9w==
+"@sicpa-dlab/didcomm-react-native@^0.0.6":
+  version "0.0.6"
+  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/didcomm-react-native/0.0.6/2897df26fa6edbfc66154afea449e2121658747100fd97fd836d710004db0fe7#08cf6e81fb68f52a2ef9c1254930102c4d98b121"
+  integrity sha512-O8w6cbM+xUfMb0z8q2IjGtf+CxUgVxl9y59RqMA+b5LTWh4WaWBzz9L8RXa2G7C8ASwcPfQQuLKJMp8K7M5w8w==
 
-"@sicpa-dlab/value-transfer-protocol-ts@^0.0.3":
-  version "0.0.3"
-  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/value-transfer-protocol-ts/0.0.3/f6fc7de7c85b4a8205e426fd8a29a9a7e1ff954518477b9712f245fa90e880c7#90dddf2f15f7d46030a014cdf53e344209485c3d"
-  integrity sha512-lFlpomiFz5zp5X0XJao52uwOqhGB0jrWBy2s6HTI35nJlbfQ/q4AZIy4ZHgaCKB0r/paslWDP1NuVKLWp/7a9Q==
+"@sicpa-dlab/value-transfer-protocol-ts@0.0.10":
+  version "0.0.10"
+  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/value-transfer-protocol-ts/0.0.10/4e17806e7c929a12e960a446f948a46875acb39b311ece8a20427e45f929fcc0#7c553468191754eedb4be467fca7afea882ebcf7"
+  integrity sha512-aPFMFgz1hX3cQxpK46sJwWM2+++/epTTeBcdUNN5JAz5rjc8EyOFesI9yHc89kYUkbCBHyAgpLaEhth4CVD89g==
   dependencies:
-    "@noble/hashes" "^1.0.0"
+    "@stablelib/ed25519" "^1.0.2"
+    "@stablelib/sha256" "^1.0.1"
     "@stablelib/uuid" "^1.0.1"
+    bloom-filters "^3.0.0"
+    buffer "^6.0.3"
+    class-transformer "^0.5.1"
+    class-validator "^0.13.2"
+    fast-json-patch "^3.1.1"
+    reflect-metadata "^0.1.13"
 
 "@sicpa-dlab/value-transfer-protocol-ts@^0.0.6":
   version "0.0.6"
   resolved "https://npm.pkg.github.com/download/@sicpa-dlab/value-transfer-protocol-ts/0.0.6/6aacaadc5285c19f4d2af7b38e5cb457757c4fb8f868d545b49691f437e1b24d#5480086a7c980147309d1a3d10dd7aab8d6691c4"
   integrity sha512-5LZTDrDdsz1UCgyye0+dU74oEq8Uy+rywVnC7GGXX9l4vswEAGEgm6rc7Wws8wW9b1yhC1tZRJjyWK5dzSo/Pw==
+  dependencies:
+    "@stablelib/ed25519" "^1.0.2"
+    "@stablelib/sha256" "^1.0.1"
+    "@stablelib/uuid" "^1.0.1"
+    bloom-filters "^3.0.0"
+    buffer "^6.0.3"
+    class-transformer "^0.5.1"
+    class-validator "^0.13.2"
+    reflect-metadata "^0.1.13"
+
+"@sicpa-dlab/value-transfer-protocol-ts@^0.0.8":
+  version "0.0.8"
+  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/value-transfer-protocol-ts/0.0.8/f5f1a434747508ac8762d278d5339dbebe2e567c74638a6caef946957b7150c0#d55120c58f4bdd721a99fbce8ef0f6bc22a9c934"
+  integrity sha512-Y9Y8fQsmlDJmKyNl8MWCVM68FngWdHG0hp1VoJbuIa0z9zKb+YThjZPHNtPNyeRKuJEQvlSqWniAY8pyKkG/9A==
   dependencies:
     "@stablelib/ed25519" "^1.0.2"
     "@stablelib/sha256" "^1.0.1"
@@ -4996,6 +5017,11 @@ fast-glob@^3.2.9:
     glob-parent "^5.1.2"
     merge2 "^1.3.0"
     micromatch "^4.0.4"
+
+fast-json-patch@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/fast-json-patch/-/fast-json-patch-3.1.1.tgz#85064ea1b1ebf97a3f7ad01e23f9337e72c66947"
+  integrity sha512-vf6IHUX2SBcA+5/+4883dsIjpBTqmfBjmYiWK1savxQmFk4JfBMLa7ynTYOs1Rolp/T1betJxHiGD3g1Mn8lUQ==
 
 fast-json-stable-stringify@2.x, fast-json-stable-stringify@^2.0.0:
   version "2.1.0"
