@@ -16,6 +16,7 @@ import { ValueTransferService } from '../services/ValueTransferService'
 import { AriesFrameworkError } from '../../../error'
 import { DidRecord } from '../../dids/repository/DidRecord'
 import { DidDocumentRole } from '../../dids/domain/DidDocumentRole'
+
 // Mock classes
 jest.mock('../repository/ValueTransferRepository')
 jest.mock('../repository/ValueTransferStateRepository')
@@ -83,7 +84,10 @@ describe('ValueTransferService', () => {
         witnessTransport: 'nfc',
         verifiableNotes: createVerifiableNotes(10),
       }
+
+      const repositorySaveSpy = jest.spyOn(valueTransferRepository, 'save')
       await valueTransferService.initState(valueTransferConfig)
+      expect(repositorySaveSpy).toBeCalled
     })
 
     it('should correctly initState for Giver/Getter without verifiableNotes', async () => {
@@ -92,7 +96,10 @@ describe('ValueTransferService', () => {
         witnessTransport: 'nfc',
         verifiableNotes: [],
       }
+
+      const repositorySaveSpy = jest.spyOn(valueTransferRepository, 'save')
       await valueTransferService.initState(valueTransferConfig)
+      expect(repositorySaveSpy).toBeCalled
     })
 
     it('should throw AriesFrameworkError in initState for Witness without publicDid', async () => {
@@ -122,8 +129,10 @@ describe('ValueTransferService', () => {
         isPublic: true,
       })
 
+      const repositorySaveSpy = jest.spyOn(valueTransferRepository, 'save')
       mockFunction(didService.findPublicDid).mockReturnValue(Promise.resolve(mockDidRecord))
       await valueTransferService.initState(valueTransferConfig)
+      expect(repositorySaveSpy).toBeCalled
     })
   })
 })

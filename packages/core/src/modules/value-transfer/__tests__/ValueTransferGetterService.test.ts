@@ -6,7 +6,7 @@ import { ValueTransferRepository } from '../repository/ValueTransferRepository'
 import { ValueTransferStateRepository } from '../repository/ValueTransferStateRepository'
 import { ValueTransferCryptoService } from '../services/ValueTransferCryptoService'
 import { ValueTransferStateService } from '../services/ValueTransferStateService'
-import { getAgentConfig, mockFunction } from '../../../../tests/helpers';
+import { getAgentConfig, mockFunction } from '../../../../tests/helpers'
 import { ValueTransferRole } from '../ValueTransferRole'
 import { ValueTransferService } from '../services/ValueTransferService'
 import { AriesFrameworkError } from '../../../error'
@@ -179,8 +179,10 @@ describe('ValueTransferService', () => {
         giver: { did: 'did:peer:0z6Mkn2R14AfjBZjhxAqKNKT9coYWkxUM2m96egVqZAzuQX1H' },
         witness: { did: 'did:peer:0z6MkhuEV8mevESoVDVVtnznFfc6MHGwSwhwqM9FSooVntCEu' },
         valueTransferMessage: new ValueTransferMessage(),
-      });
-      (GetterMock.prototype.acceptCache).mockReturnValue(Promise.resolve({message: new ValueTransferMessage(), delta: new ValueTransferDelta()}))
+      })
+      GetterMock.prototype.acceptCache.mockReturnValue(
+        Promise.resolve({ message: new ValueTransferMessage(), delta: new ValueTransferDelta() })
+      )
       mockFunction(valueTransferRepository.getByThread).mockReturnValue(Promise.resolve(mockValueTransferRecord))
       await valueTransferGetterService.processRequestAcceptanceWitnessed(msgContext)
     })
