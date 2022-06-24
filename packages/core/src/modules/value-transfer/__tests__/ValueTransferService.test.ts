@@ -13,15 +13,9 @@ import { getAgentConfig, mockFunction } from '../../../../tests/helpers'
 import { ValueTransferConfig } from '../../../types'
 import { ValueTransferRole } from '../ValueTransferRole'
 import { ValueTransferService } from '../services/ValueTransferService'
-import { EnvelopeService } from '../../../agent/didcomm/EnvelopeService'
-import { TransportService } from 'packages/core/src/agent/TransportService'
-import { MessageRepository } from '../../../storage/MessageRepository'
-import testLogger from '../../../../tests/logger'
-import { DidResolverService } from '../../dids/services/DidResolverService'
 import { AriesFrameworkError } from '../../../error'
 import { DidRecord } from '../../dids/repository/DidRecord'
 import { DidDocumentRole } from '../../dids/domain/DidDocumentRole'
-
 // Mock classes
 jest.mock('../repository/ValueTransferRepository')
 jest.mock('../repository/ValueTransferStateRepository')
@@ -56,7 +50,6 @@ describe('ValueTransferService', () => {
   let valueTransferService: ValueTransferService
 
   beforeEach(() => {
-    // valueTransferRepository = new ValueTransferRepositoryMock()
     valueTransferRepository = new ValueTransferRepositoryMock()
     valueTransferStateRepository = new ValueTransferStateRepositoryMock()
     valueTransferCryptoService = new ValueTransferCryptoServiceMock()
