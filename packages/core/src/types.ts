@@ -26,6 +26,10 @@ export interface WalletConfig {
   id: string
   key: string
   keyDerivationMethod?: KeyDerivationMethod
+  storage?: {
+    type: string
+    [key: string]: unknown
+  }
 }
 
 export interface WalletConfigRekey {
