@@ -20,6 +20,8 @@ import {
   RequestAcceptedWitnessedHandler,
   RequestHandler,
   MintHandler,
+  WitnessTableQueryHandler,
+  WitnessTableHandler,
 } from './handlers'
 import { OfferAcceptedHandler } from './handlers/OfferAcceptedHandler'
 import { OfferAcceptedWitnessedHandler } from './handlers/OfferAcceptedWitnessedHandler'
@@ -303,7 +305,14 @@ export class ValueTransferModule {
    * @param notes Verifiable notes to add.
    */
   public async receiveNotes(notes: VerifiableNote[]) {
-    await this.valueTransferService.receiveNotes(notes)
+    await this.valueTransferIssuerService.receiveNotes(notes)
+  }
+
+  /**
+   * Request the list of available witnesses
+   */
+  public async requestWitnessTable(witness?: string): Promise<void> {
+    return this.valueTransferService.requestWitnessTable(witness)
   }
 
   public getAll(): Promise<ValueTransferRecord[]> {
@@ -350,5 +359,7 @@ export class ValueTransferModule {
       new OfferAcceptedWitnessedHandler(this.valueTransferService, this.valueTransferGiverService)
     )
     dispatcher.registerHandler(new MintHandler(this.valueTransferWitnessService))
+    dispatcher.registerHandler(new WitnessTableQueryHandler(this.valueTransferWitnessService))
+    dispatcher.registerHandler(new WitnessTableHandler(this.valueTransferService))
   }
 }

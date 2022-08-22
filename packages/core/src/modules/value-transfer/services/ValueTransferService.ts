@@ -1,11 +1,11 @@
 import type { DIDCommV2Message } from '../../../agent/didcomm'
 import type { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
 import type { Transports } from '../../routing/types'
-import type { ValueTransferStateChangedEvent } from '../ValueTransferEvents'
+import type { ValueTransferStateChangedEvent, WitnessTableReceivedEvent } from '../ValueTransferEvents'
+import type { WitnessTableMessage } from '../messages'
 import type { ValueTransferRecord, ValueTransferTags } from '../repository'
-import type { VerifiableNote } from '@sicpa-dlab/value-transfer-protocol-ts'
 
-import { PartyState, TransactionRecord, ValueTransfer, Wallet } from '@sicpa-dlab/value-transfer-protocol-ts'
+import { PartyState, ValueTransfer, Wallet } from '@sicpa-dlab/value-transfer-protocol-ts'
 import { firstValueFrom, ReplaySubject } from 'rxjs'
 import { first, map, timeout } from 'rxjs/operators'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -15,12 +15,12 @@ import { EventEmitter } from '../../../agent/EventEmitter'
 import { MessageSender } from '../../../agent/MessageSender'
 import { SendingMessageType } from '../../../agent/didcomm/types'
 import { AriesFrameworkError } from '../../../error'
-import { DidResolverService } from '../../dids'
+import { DidMarker, DidResolverService } from '../../dids'
 import { DidService } from '../../dids/services/DidService'
 import { ValueTransferEventTypes } from '../ValueTransferEvents'
 import { ValueTransferRole } from '../ValueTransferRole'
 import { ValueTransferState } from '../ValueTransferState'
-import { ProblemReportMessage } from '../messages'
+import { ProblemReportMessage, WitnessTableQueryMessage } from '../messages'
 import { ValueTransferRepository, ValueTransferTransactionStatus } from '../repository'
 import { ValueTransferStateRecord } from '../repository/ValueTransferStateRecord'
 import { ValueTransferStateRepository } from '../repository/ValueTransferStateRepository'
@@ -79,47 +79,17 @@ export class ValueTransferService {
    * Init party (Getter or Giver) state in the Wallet
    */
   public async initPartyState(): Promise<void> {
-    const partyState = await this.getPartyState()
+    const partyState = await this.findPartyState()
     if (partyState) return
 
     const state = new ValueTransferStateRecord({
-      partyState: new PartyState(new Uint8Array(), new Wallet()),
+      partyState: new PartyState({
+        previousHash: undefined,
+        wallet: new Wallet(),
+        ownershipKey: await this.valueTransferCryptoService.createKey(),
+      }),
     })
     await this.valueTransferStateRepository.save(state)
-  }
-
-  /**
-   * Add notes into the wallet.
-   * Init payment state if it's missing.
-   *
-   * @param notes Verifiable notes to add.
-   *
-   * @returns Transaction Record for wallet state transition after receiving notes
-   */
-  public async receiveNotes(notes: VerifiableNote[]): Promise<TransactionRecord | undefined> {
-    try {
-      // no notes to add
-      if (!notes.length) return
-
-      if (this.config.valueTransferConfig?.witness) {
-        throw new AriesFrameworkError(`Witness cannot add notes`)
-      }
-
-      const state = await this.getPartyState()
-      if (!state) {
-        throw new AriesFrameworkError(`Unable to find party state`)
-      }
-
-      const [proof, wallet] = state.partyState.wallet.receiveNotes(new Set(notes))
-      await this.valueTransferStateService.storePartyState({
-        ...state.partyState,
-        wallet,
-      })
-
-      return new TransactionRecord({ start: proof.currentState || null, end: proof.nextState })
-    } catch (e) {
-      throw new AriesFrameworkError(`Unable to add verifiable notes. Err: ${e}`)
-    }
   }
 
   /**
@@ -237,6 +207,43 @@ export class ValueTransferService {
     return { record }
   }
 
+  public async requestWitnessTable(witnessId?: string): Promise<void> {
+    const witness = witnessId || this.config.valueTransferWitnessDid
+
+    this.config.logger.info(`Requesting list of witnesses from the witness ${witness}`)
+
+    if (!witness) {
+      throw new AriesFrameworkError(`Unable to request witness table. Witness DID must be specified.`)
+    }
+
+    const did = await this.didService.findStaticDid(DidMarker.Queries)
+
+    const message = new WitnessTableQueryMessage({
+      from: did?.did,
+      to: witness,
+      body: {},
+    })
+    await this.sendMessage(message)
+  }
+
+  public async processWitnessTable(messageContext: InboundMessageContext<WitnessTableMessage>): Promise<void> {
+    this.config.logger.info('> Witness process witness table message')
+
+    const { message: witnessTable } = messageContext
+
+    if (!witnessTable.from) {
+      this.config.logger.info('   Unknown Witness Table sender')
+      return
+    }
+
+    this.eventEmitter.emit<WitnessTableReceivedEvent>({
+      type: ValueTransferEventTypes.WitnessTableReceived,
+      payload: {
+        witnesses: witnessTable.body.witnesses,
+      },
+    })
+  }
+
   public async returnWhenIsCompleted(recordId: string, timeoutMs = 120000): Promise<ValueTransferRecord> {
     const isCompleted = (record: ValueTransferRecord) => {
       return (
@@ -312,8 +319,12 @@ export class ValueTransferService {
     })
   }
 
-  public async getPartyState(): Promise<ValueTransferStateRecord | null> {
+  public async findPartyState(): Promise<ValueTransferStateRecord | null> {
     return this.valueTransferStateRepository.findSingleByQuery({})
+  }
+
+  public async getPartyState(): Promise<ValueTransferStateRecord> {
+    return this.valueTransferStateRepository.getSingleByQuery({})
   }
 
   public async getTransactionDid(usePublicDid?: boolean) {

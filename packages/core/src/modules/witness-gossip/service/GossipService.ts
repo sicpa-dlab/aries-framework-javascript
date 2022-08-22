@@ -1,8 +1,7 @@
 import type { DIDCommV2Message } from '../../../agent/didcomm'
 import type { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
 import type { ResumeValueTransferTransactionEvent } from '../../value-transfer/ValueTransferEvents'
-import type { WitnessTableReceivedEvent } from '../GossipEvents'
-import type { WitnessTableQueryMessage } from '../messages'
+import type { WitnessStateRecord } from '../../value-transfer/repository/WitnessStateRecord'
 import type {
   Witness,
   TransactionUpdate,
@@ -19,14 +18,11 @@ import { AgentConfig } from '../../../agent/AgentConfig'
 import { EventEmitter } from '../../../agent/EventEmitter'
 import { MessageSender } from '../../../agent/MessageSender'
 import { SendingMessageType } from '../../../agent/didcomm/types'
-import { AriesFrameworkError } from '../../../error'
 import { ValueTransferEventTypes } from '../../value-transfer/ValueTransferEvents'
-import { WitnessStateRecord } from '../../value-transfer/repository/WitnessStateRecord'
 import { WitnessStateRepository } from '../../value-transfer/repository/WitnessStateRepository'
 import { ValueTransferCryptoService } from '../../value-transfer/services/ValueTransferCryptoService'
 import { ValueTransferStateService } from '../../value-transfer/services/ValueTransferStateService'
-import { GossipEventTypes } from '../GossipEvents'
-import { WitnessData, WitnessGossipMessage, WitnessTableMessage } from '../messages'
+import { WitnessGossipMessage } from '../messages'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GossipService {
@@ -107,7 +103,7 @@ export class GossipService {
   public async requestMissingTransactions(pthid?: string): Promise<void> {
     this.config.logger.info(`> Witness: request transaction updates for paused transaction ${pthid}`)
 
-    const state = await this.getWitnessState()
+    const state = await this.valueTransferStateService.getWitnessStateRecord()
 
     const topWitness = state.topWitness
 
@@ -138,7 +134,7 @@ export class GossipService {
   private async gossipSignedTransactions(): Promise<void> {
     this.config.logger.info(`> Witness: gossip transaction`)
 
-    const state = await this.getWitnessState()
+    const state = await this.valueTransferStateService.getWitnessStateRecord()
 
     const operation = async () => {
       return this.witness.prepareTransactionUpdate()
@@ -178,7 +174,7 @@ export class GossipService {
       return
     }
 
-    const state = await this.getWitnessState()
+    const state = await this.valueTransferStateService.getWitnessStateRecord()
 
     this.config.logger.info(`   Last state tracker: ${state.witnessState.lastUpdateTracker}`)
     this.config.logger.info(`   Registered state hashes : ${state.witnessState.partyStateHashes.size}`)
@@ -215,7 +211,7 @@ export class GossipService {
       await this.processReceivedAskForTransactionUpdates(witnessGossipMessage)
     }
 
-    const stateAfter = await this.getWitnessState()
+    const stateAfter = await this.valueTransferStateService.getWitnessStateRecord()
     this.config.logger.info('   < Witness: processing of gossip message completed')
     this.config.logger.info(`       Last state tracker: ${stateAfter.witnessState.lastUpdateTracker}`)
     this.config.logger.info(`       Register state hashes : ${stateAfter.witnessState.partyStateHashes.size}`)
@@ -249,7 +245,7 @@ export class GossipService {
   }
 
   private async processReceivedAskForTransactionUpdates(witnessGossipMessage: WitnessGossipMessage): Promise<void> {
-    const state = await this.doSafeOperationWithWitnessSate(this.getWitnessState)
+    const state = await this.doSafeOperationWithWitnessSate(this.valueTransferStateService.getWitnessStateRecord)
 
     const ask = witnessGossipMessage.body.ask
     if (!ask) return
@@ -325,7 +321,7 @@ export class GossipService {
   private async cleanupState(): Promise<void> {
     this.config.logger.info('> Witness: clean up hanged transaction updates')
 
-    const state = await this.getWitnessState()
+    const state = await this.valueTransferStateService.getWitnessStateRecord()
 
     const history = state.witnessState.transactionUpdatesHistory
     const threshold = this.config.witnessHistoryThreshold
@@ -338,56 +334,6 @@ export class GossipService {
 
     this.config.logger.info('< Witness: clean up hanged transaction updates completed!')
     return
-  }
-
-  public async processWitnessTableQuery(
-    messageContext: InboundMessageContext<WitnessTableQueryMessage>
-  ): Promise<void> {
-    this.config.logger.info('> Witness process witness table query message')
-
-    const { message: witnessTableQuery } = messageContext
-
-    if (!witnessTableQuery.from) {
-      this.config.logger.info('   Unknown Witness Table Query sender')
-      return
-    }
-
-    const state = await this.getWitnessState()
-
-    const witnesses = state.witnessState.mappingTable.map(
-      (witness) =>
-        new WitnessData({
-          did: witness.publicDid,
-          type: witness.type,
-        })
-    )
-
-    const message = new WitnessTableMessage({
-      from: state.gossipDid,
-      to: witnessTableQuery.from,
-      body: { witnesses },
-      thid: witnessTableQuery.id,
-    })
-
-    await this.sendMessage(message)
-  }
-
-  public async processWitnessTable(messageContext: InboundMessageContext<WitnessTableMessage>): Promise<void> {
-    this.config.logger.info('> Witness process witness table message')
-
-    const { message: witnessTable } = messageContext
-
-    if (!witnessTable.from) {
-      this.config.logger.info('   Unknown Witness Table sender')
-      return
-    }
-
-    this.eventEmitter.emit<WitnessTableReceivedEvent>({
-      type: GossipEventTypes.WitnessTableReceived,
-      payload: {
-        witnesses: witnessTable.body.witnesses,
-      },
-    })
   }
 
   private async gossipTransactionUpdate(
@@ -478,18 +424,6 @@ export class GossipService {
     }
   }
 
-  public async getWitnessState(): Promise<WitnessStateRecord> {
-    const state = await this.findWitnessState()
-    if (!state) {
-      throw new AriesFrameworkError('Witness state is not found.')
-    }
-    return state
-  }
-
-  public async findWitnessState(): Promise<WitnessStateRecord | null> {
-    return this.witnessStateRepository.findSingleByQuery({})
-  }
-
   public async sendMessage(message: DIDCommV2Message) {
     this.config.logger.info(`Sending Gossip message with type '${message.type}' to DID ${message?.to}`)
     const sendingMessageType = message.to ? SendingMessageType.Encrypted : SendingMessageType.Signed
@@ -501,6 +435,6 @@ export class GossipService {
     // FIXME: `safeSateOperation` locks the whole WitnessState
     // I used it only for functions mutating the state to prevent concurrent updates
     // We need to discuss the list of read/write operations which should use this lock and how to do it properly
-    return this.witnessStateRepository.safeOperation(WitnessStateRecord.id, operation.bind(this))
+    return this.valueTransferStateService.safeOperationWithWitnessState(operation.bind(this))
   }
 }
