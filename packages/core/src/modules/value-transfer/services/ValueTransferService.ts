@@ -84,9 +84,10 @@ export class ValueTransferService {
 
     const state = new ValueTransferStateRecord({
       partyState: new PartyState({
-        previousHash: undefined,
-        wallet: new Wallet(),
-        ownershipKey: await this.valueTransferCryptoService.createKey(),
+        wallet: new Wallet({
+          previousHash: null,
+          ownershipKey: await this.valueTransferCryptoService.createKey(),
+        }),
       }),
     })
     await this.valueTransferStateRepository.save(state)
@@ -150,7 +151,7 @@ export class ValueTransferService {
     message?: ProblemReportMessage
   }> {
     if (record.role === ValueTransferRole.Witness) {
-      // TODO: discuss weather Witness can abort transaction
+      // TODO: discuss whether Witness can abort transaction
       throw new AriesFrameworkError('Transaction cannot be canceled by Witness.')
     }
 
@@ -162,15 +163,19 @@ export class ValueTransferService {
       throw new AriesFrameworkError('Transaction cannot be canceled as it is failed.')
     }
 
+    if (record.status === ValueTransferTransactionStatus.InProgress) {
+      const valueTransferParty =
+        record.role === ValueTransferRole.Giver ? this.valueTransfer.giver() : this.valueTransfer.getter()
+      await valueTransferParty.abortTransaction()
+    }
+
     let from = undefined
     let to = undefined
 
     if (record.role === ValueTransferRole.Giver) {
-      await this.valueTransfer.giver().abortTransaction()
       from = record.giver?.did
       to = record.state === ValueTransferState.ReceiptReceived ? record.witness?.did : record.getter?.did
     } else if (record.role === ValueTransferRole.Getter) {
-      await this.valueTransfer.getter().abortTransaction()
       from = record.getter?.did
       to = record.state === ValueTransferState.OfferReceived ? record.witness?.did : record.giver?.did
     }
@@ -181,7 +186,7 @@ export class ValueTransferService {
       pthid: record.threadId,
       body: {
         code: code || 'e.p.transaction-aborted',
-        comment: `Transaction aborted by ${from}. ` + (reason ? `Reason: ${reason}.` : ''),
+        comment: reason || `Transaction aborted by ${from}`,
       },
     })
 
@@ -276,7 +281,8 @@ export class ValueTransferService {
   public async sendMessage(message: DIDCommV2Message, transport?: Transports) {
     this.config.logger.info(`Sending VTP message with type '${message.type}' to DID ${message?.to}`)
     const sendingMessageType = message.to ? SendingMessageType.Encrypted : SendingMessageType.Signed
-    await this.messageSender.sendDIDCommV2Message(message, sendingMessageType, transport)
+    const transports = transport ? [transport] : undefined
+    await this.messageSender.sendDIDCommV2Message(message, sendingMessageType, transports)
   }
 
   public async getBalance(): Promise<number> {

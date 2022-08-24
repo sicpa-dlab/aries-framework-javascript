@@ -282,13 +282,13 @@ export class MessageSender {
   public async sendDIDCommV2Message(
     message: DIDCommV2Message,
     sendingMessageType: SendingMessageType = SendingMessageType.Encrypted,
-    transport?: Transports
+    transports?: Transports[]
   ) {
     // recipient is not specified -> send to defaultTransport
-    if (!message.to?.length && transport) {
+    if (!message.to?.length && transports?.length) {
       const service = new DidCommV2Service({
-        id: transport,
-        serviceEndpoint: transport,
+        id: transports[0],
+        serviceEndpoint: transports[0],
       })
 
       if (sendingMessageType === SendingMessageType.Plain) {
@@ -307,10 +307,10 @@ export class MessageSender {
     }
 
     // recipient is not specified and transport is not passed explicitly
-    if (!message.to?.length && !transport) return
+    if (!message.to?.length && !transports?.length) return
 
     // else find service and send message there
-    const service = await this.findRecipientService(message, transport)
+    const service = await this.findRecipientService(message, transports)
 
     if (sendingMessageType === SendingMessageType.Plain) {
       // send message plaintext
@@ -366,7 +366,10 @@ export class MessageSender {
     await this.sendMessage(outboundPackage, service.protocolScheme)
   }
 
-  private async findRecipientService(message: DIDCommV2Message, transport?: Transports): Promise<DidDocumentService> {
+  private async findRecipientService(
+    message: DIDCommV2Message,
+    transports?: Transports[]
+  ): Promise<DidDocumentService> {
     if (!message.to?.length) {
       throw new AriesFrameworkError(`Unable to send message encrypted. Message doesn't contain recipient DID.`)
     }
@@ -384,7 +387,9 @@ export class MessageSender {
 
     let services = didDocument?.service || []
 
-    const supportedTransports = transport ? [transport, ...this.agentConfig.transports] : this.agentConfig.transports
+    const supportedTransports = transports?.length
+      ? [...transports, ...this.agentConfig.transports]
+      : this.agentConfig.transports
 
     // Sort services according to supported transports
     const priority = supportedTransports.map((transport) => transport.toString())
@@ -461,24 +466,17 @@ export class MessageSender {
   }
 
   public async sendMessage(outboundPackage: OutboundPackage, transport?: string) {
-    try {
-      this.logger.debug(`Sending outbound message to transport:`, { transport })
-      if (transport) {
-        for (const outboundTransport of this.outboundTransports) {
-          if (outboundTransport.supportedSchemes.includes(transport)) {
-            await outboundTransport.sendMessage(outboundPackage)
-            break
-          }
+    this.logger.debug(`Sending outbound message to transport:`, { transport })
+    if (transport) {
+      for (const outboundTransport of this.outboundTransports) {
+        if (outboundTransport.supportedSchemes.includes(transport)) {
+          await outboundTransport.sendMessage(outboundPackage)
+          break
         }
-      } else {
-        // try to send to the first registered
-        await this.outboundTransports[0]?.sendMessage(outboundPackage)
       }
-    } catch (error) {
-      this.logger.debug(`Sending outbound message failed with the following error:`, {
-        message: error.message,
-        error: error,
-      })
+    } else {
+      // try to send to the first registered
+      await this.outboundTransports[0]?.sendMessage(outboundPackage)
     }
   }
 

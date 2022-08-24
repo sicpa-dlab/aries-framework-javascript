@@ -254,7 +254,7 @@ export class ValueTransferModule {
     const record = await this.valueTransferService.getById(recordId)
 
     // Abort transaction
-    const { message } = await this.valueTransferService.abortTransaction(record, reason)
+    const { message } = await this.valueTransferService.abortTransaction(record, code, reason)
     // Send Transaction Abort message to Witness
     if (message && send) await this.valueTransferService.sendMessage(message)
 
@@ -268,9 +268,7 @@ export class ValueTransferModule {
    */
   public async mintCash(amount: number, witness: string): Promise<void> {
     // Mint Verifiable Notes
-    const message = await this.valueTransferIssuerService.mintCash(amount, witness)
-    // Send mint message to Witness to update state
-    await this.valueTransferService.sendMessage(message)
+    await this.valueTransferIssuerService.mintCash(amount, witness)
   }
 
   /**
