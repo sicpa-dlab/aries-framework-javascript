@@ -77,7 +77,7 @@ export class GossipService {
       .pipe(takeUntil(this.config.stop$))
       .subscribe(async () => {
         try {
-          await this.doSafeOperationWithWitnessSate(this.cleanupState)
+          await this.doSafeOperationWithWitnessState(this.cleanupState)
         } catch (error) {
           this.config.logger.info(`Witness: Unexpected error happened while cleaning state. Error: ${error}`)
         }
@@ -137,7 +137,7 @@ export class GossipService {
     const operation = async () => {
       return this.witness.prepareTransactionUpdate()
     }
-    const { transactionUpdate, error } = await this.doSafeOperationWithWitnessSate(operation)
+    const { transactionUpdate, error } = await this.doSafeOperationWithWitnessState(operation)
     if (error) {
       this.config.logger.info(`  < Witness: Unable to prepare transaction update. Error: ${error}`)
       return
@@ -234,14 +234,14 @@ export class GossipService {
     const operation = async () => {
       return this.witness.processTransactionUpdates(transactionUpdates)
     }
-    await this.doSafeOperationWithWitnessSate(operation)
+    await this.doSafeOperationWithWitnessState(operation)
 
     this.config.logger.info('< Witness: process transactions completed')
     return
   }
 
   private async processReceivedAskForTransactionUpdates(witnessGossipMessage: WitnessGossipMessage): Promise<void> {
-    const state = await this.doSafeOperationWithWitnessSate(this.valueTransferStateService.getWitnessStateRecord)
+    const state = await this.doSafeOperationWithWitnessState(this.valueTransferStateService.getWitnessStateRecord)
 
     const ask = witnessGossipMessage.body.ask
     if (!ask) return
@@ -435,7 +435,7 @@ export class GossipService {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public async doSafeOperationWithWitnessSate(operation: () => Promise<any>): Promise<any> {
+  public async doSafeOperationWithWitnessState(operation: () => Promise<any>): Promise<any> {
     // FIXME: `safeSateOperation` locks the whole WitnessState
     // I used it only for functions mutating the state to prevent concurrent updates
     // We need to discuss the list of read/write operations which should use this lock and how to do it properly
