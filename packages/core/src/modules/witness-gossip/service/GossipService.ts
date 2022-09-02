@@ -434,8 +434,7 @@ export class GossipService {
 
   public async sendMessage(message: DIDCommV2Message) {
     this.config.logger.info(`Sending Gossip message with type '${message.type}' to DID ${message?.to}`)
-    const sendingMessageType = message.to ? SendingMessageType.Encrypted : SendingMessageType.Signed
-    await this.messageSender.sendDIDCommV2Message(message, sendingMessageType)
+    await this.messageSender.sendDIDCommV2Message(message, SendingMessageType.Plain)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
