@@ -1,5 +1,5 @@
 import type { ValueTransferStateRecord } from '../repository/ValueTransferStateRecord'
-import type { PartyState, StorageInterface, WitnessState } from '@sicpa-dlab/value-transfer-protocol-ts'
+import type { PartyState, StorageInterface, WitnessInfo, WitnessState } from '@sicpa-dlab/value-transfer-protocol-ts'
 
 import AsyncLock from 'async-lock'
 import { Lifecycle, scoped } from 'tsyringe'
@@ -15,6 +15,13 @@ export class ValueTransferStateService implements StorageInterface {
   private valueTransferStateRecord?: ValueTransferStateRecord
   // private witnessStateRecord?: WitnessStateRecord
   private witnessStateLock: AsyncLock
+  private witnessStateGeneralInfo?: {
+    topWitness: WitnessInfo
+    lastUpdateTracker: Map<string, number>
+    gossipDid: string
+    partyStateHashesSize: number
+    partyStateGapsTrackerLength: number
+  }
 
   public constructor(
     valueTransferStateRepository: ValueTransferStateRepository,
@@ -37,6 +44,20 @@ export class ValueTransferStateService implements StorageInterface {
       this.valueTransferStateRecord = await this.valueTransferStateRepository.getSingleByQuery({})
     }
     return this.valueTransferStateRecord.partyState
+  }
+
+  public async getWitnessStateGeneralInfo() {
+    if (!this.witnessStateGeneralInfo) {
+      const state = await this.getWitnessStateRecord()
+      this.witnessStateGeneralInfo = {
+        topWitness: state.topWitness,
+        lastUpdateTracker: state.witnessState.lastUpdateTracker,
+        gossipDid: state.gossipDid,
+        partyStateHashesSize: state.witnessState.partyStateHashes.size,
+        partyStateGapsTrackerLength: state.witnessState.partyStateGapsTracker.length,
+      }
+    }
+    return this.witnessStateGeneralInfo
   }
 
   public async storePartyState(partyState: PartyState): Promise<void> {
@@ -65,6 +86,13 @@ export class ValueTransferStateService implements StorageInterface {
   public async storeWitnessState(witnessState: WitnessState): Promise<void> {
     const record = await this.witnessStateRepository.getSingleByQuery({})
     record.witnessState = witnessState
+    this.witnessStateGeneralInfo = {
+      topWitness: record.topWitness,
+      gossipDid: record.gossipDid,
+      lastUpdateTracker: witnessState.lastUpdateTracker,
+      partyStateHashesSize: witnessState.partyStateHashes.size,
+      partyStateGapsTrackerLength: witnessState.partyStateGapsTracker.length,
+    }
     await this.witnessStateRepository.update(record)
     // this.witnessStateRecord = record
   }

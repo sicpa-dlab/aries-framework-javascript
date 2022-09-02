@@ -103,19 +103,19 @@ export class GossipService {
   public async requestMissingTransactions(pthid?: string): Promise<void> {
     this.config.logger.info(`> Witness: request transaction updates for paused transaction ${pthid}`)
 
-    const state = await this.valueTransferStateService.getWitnessStateRecord()
+    const witnessStateInfo = await this.valueTransferStateService.getWitnessStateGeneralInfo()
 
-    const topWitness = state.topWitness
+    const topWitness = witnessStateInfo.topWitness
 
     // find last known state of top witness and request for transactions
-    const tim = state.witnessState.lastUpdateTracker.get(topWitness.wid)
+    const tim = witnessStateInfo.lastUpdateTracker.get(topWitness.wid)
     if (tim === undefined) {
       this.config.logger.info(`VTP: Unable to find last witness state in tracker for wid: ${topWitness.wid}`)
       return
     }
 
     const message = new WitnessGossipMessage({
-      from: state.gossipDid,
+      from: witnessStateInfo.gossipDid,
       to: topWitness.gossipDid,
       body: {
         ask: { since: tim },
@@ -134,8 +134,6 @@ export class GossipService {
   private async gossipSignedTransactions(): Promise<void> {
     this.config.logger.info(`> Witness: gossip transaction`)
 
-    const state = await this.valueTransferStateService.getWitnessStateRecord()
-
     const operation = async () => {
       return this.witness.prepareTransactionUpdate()
     }
@@ -151,6 +149,7 @@ export class GossipService {
       return
     }
 
+    const state = await this.valueTransferStateService.getWitnessStateRecord()
     await this.gossipTransactionUpdate(state, transactionUpdate)
 
     this.config.logger.info(`   < Witness: gossip transaction completed!`)
@@ -211,14 +210,11 @@ export class GossipService {
       await this.processReceivedAskForTransactionUpdates(witnessGossipMessage)
     }
 
-    const stateAfter = await this.valueTransferStateService.getWitnessStateRecord()
+    const witnessStateInfoAfter = await this.valueTransferStateService.getWitnessStateGeneralInfo()
     this.config.logger.info('   < Witness: processing of gossip message completed')
-    this.config.logger.info(`       Last state tracker: ${stateAfter.witnessState.lastUpdateTracker}`)
-    this.config.logger.info(`       Register state hashes : ${stateAfter.witnessState.partyStateHashes.size}`)
-    this.config.logger.info(`       Register state hashes : ${stateAfter.witnessState.partyStateHashes}`)
-    this.config.logger.info(
-      `       Register gap state hashes : ${stateAfter.witnessState.partyStateGapsTracker.length}`
-    )
+    this.config.logger.info(`       Last state tracker: ${witnessStateInfoAfter.lastUpdateTracker}`)
+    this.config.logger.info(`       Register state hashes : ${witnessStateInfoAfter.partyStateHashesSize}`)
+    this.config.logger.info(`       Register gap state hashes : ${witnessStateInfoAfter.partyStateGapsTrackerLength}`)
   }
 
   private async processReceivedTransactionUpdates(witnessGossipMessage: WitnessGossipMessage): Promise<void> {
