@@ -23,6 +23,7 @@ import { WitnessStateRepository } from '../../value-transfer/repository/WitnessS
 import { ValueTransferCryptoService } from '../../value-transfer/services/ValueTransferCryptoService'
 import { ValueTransferStateService } from '../../value-transfer/services/ValueTransferStateService'
 import { WitnessGossipMessage } from '../messages'
+import { WitnessStateGeneralInfo } from '../../value-transfer/WitnessStateGeneralInfo'
 
 @scoped(Lifecycle.ContainerScoped)
 export class GossipService {
@@ -149,8 +150,8 @@ export class GossipService {
       return
     }
 
-    const state = await this.valueTransferStateService.getWitnessStateRecord()
-    await this.gossipTransactionUpdate(state, transactionUpdate)
+    const witnessStateInfo = await this.valueTransferStateService.getWitnessStateGeneralInfo()
+    await this.gossipTransactionUpdate(witnessStateInfo, transactionUpdate)
 
     this.config.logger.info(`   < Witness: gossip transaction completed!`)
     return
@@ -173,13 +174,15 @@ export class GossipService {
       return
     }
 
-    const state = await this.valueTransferStateService.getWitnessStateRecord()
+    const witnessStateInfo = await this.valueTransferStateService.getWitnessStateGeneralInfo()
 
-    this.config.logger.info(`   Last state tracker: ${state.witnessState.lastUpdateTracker}`)
-    this.config.logger.info(`   Registered state hashes : ${state.witnessState.partyStateHashes.size}`)
+    this.config.logger.info(`   Last state tracker: ${witnessStateInfo.lastUpdateTracker}`)
+    this.config.logger.info(`   Registered state hashes : ${witnessStateInfo.numberPartyStateHashes}`)
 
     // validate that message sender is one of known knownWitnesses
-    const knownWitness = state.knownWitnesses.find((witness) => witness.gossipDid === witnessGossipMessage.from)
+    const knownWitness = witnessStateInfo.knownWitnessDids.find(
+      (witness) => witness.gossipDid === witnessGossipMessage.from
+    )
     if (!knownWitness) {
       this.config.logger.info(
         `   Transaction Updated received from an unknown Witness DID: ${witnessGossipMessage.from}`
@@ -201,7 +204,7 @@ export class GossipService {
         })
       }
 
-      await this.resendTransactionUpdateIfNeed(state, witnessGossipMessage)
+      await this.resendTransactionUpdateIfNeed(witnessStateInfo, witnessGossipMessage)
     }
 
     const ask = witnessGossipMessage.body.ask
@@ -213,8 +216,8 @@ export class GossipService {
     const witnessStateInfoAfter = await this.valueTransferStateService.getWitnessStateGeneralInfo()
     this.config.logger.info('   < Witness: processing of gossip message completed')
     this.config.logger.info(`       Last state tracker: ${witnessStateInfoAfter.lastUpdateTracker}`)
-    this.config.logger.info(`       Register state hashes : ${witnessStateInfoAfter.partyStateHashesSize}`)
-    this.config.logger.info(`       Register gap state hashes : ${witnessStateInfoAfter.partyStateGapsTrackerLength}`)
+    this.config.logger.info(`       Register state hashes : ${witnessStateInfoAfter.numberPartyStateHashes}`)
+    this.config.logger.info(`       Register gap state hashes : ${witnessStateInfoAfter.numberPartyStateHashGaps}`)
   }
 
   private async processReceivedTransactionUpdates(witnessGossipMessage: WitnessGossipMessage): Promise<void> {
@@ -333,21 +336,19 @@ export class GossipService {
   }
 
   private async gossipTransactionUpdate(
-    state: WitnessStateRecord,
+    witnessStateInfo: WitnessStateGeneralInfo,
     transactionUpdate: TransactionUpdate,
     exclude: string[] = []
   ): Promise<void> {
     // prepare message and send to all known knownWitnesses
-    for (const witness of state.knownWitnesses) {
+    for (const witness of witnessStateInfo.knownWitnessDids) {
       if (!exclude.includes(witness.gossipDid)) {
-        const body = { tell: { id: state.witnessState.info.gossipDid } }
+        const body = { tell: { id: witnessStateInfo.gossipDid } }
         const attachments = [
-          WitnessGossipMessage.createTransactionUpdateJSONAttachment(state.witnessState.info.gossipDid, [
-            transactionUpdate,
-          ]),
+          WitnessGossipMessage.createTransactionUpdateJSONAttachment(witnessStateInfo.gossipDid, [transactionUpdate]),
         ]
         const message = new WitnessGossipMessage({
-          from: state.gossipDid,
+          from: witnessStateInfo.gossipDid,
           to: witness.gossipDid,
           body,
           attachments,
@@ -358,7 +359,7 @@ export class GossipService {
   }
 
   private async resendTransactionUpdateIfNeed(
-    state: WitnessStateRecord,
+    witnessStateInfo: WitnessStateGeneralInfo,
     originalMessage: WitnessGossipMessage
   ): Promise<void> {
     // 1. message received from original initiator - not re-sent from other witness
@@ -368,11 +369,11 @@ export class GossipService {
     if (originalMessage.thid) return
 
     // re-send received transaction updated to other witnesses
-    for (const witness of state.knownWitnesses) {
+    for (const witness of witnessStateInfo.knownWitnessDids) {
       // 1. do not re-send to original sender
       if (originalMessage.from !== witness.gossipDid) continue
       const message = new WitnessGossipMessage({
-        from: state.gossipDid,
+        from: witnessStateInfo.gossipDid,
         to: witness.gossipDid,
         body: originalMessage.body,
         attachments: originalMessage.attachments,

@@ -7,6 +7,7 @@ import { Lifecycle, scoped } from 'tsyringe'
 import { WitnessStateRecord } from '../repository'
 import { ValueTransferStateRepository } from '../repository/ValueTransferStateRepository'
 import { WitnessStateRepository } from '../repository/WitnessStateRepository'
+import { WitnessStateGeneralInfo } from '../WitnessStateGeneralInfo'
 
 @scoped(Lifecycle.ContainerScoped)
 export class ValueTransferStateService implements StorageInterface {
@@ -15,13 +16,7 @@ export class ValueTransferStateService implements StorageInterface {
   private valueTransferStateRecord?: ValueTransferStateRecord
   // private witnessStateRecord?: WitnessStateRecord
   private witnessStateLock: AsyncLock
-  private witnessStateGeneralInfo?: {
-    topWitness: WitnessInfo
-    lastUpdateTracker: Map<string, number>
-    gossipDid: string
-    partyStateHashesSize: number
-    partyStateGapsTrackerLength: number
-  }
+  private witnessStateGeneralInfo?: WitnessStateGeneralInfo
 
   public constructor(
     valueTransferStateRepository: ValueTransferStateRepository,
@@ -53,8 +48,9 @@ export class ValueTransferStateService implements StorageInterface {
         topWitness: state.topWitness,
         lastUpdateTracker: state.witnessState.lastUpdateTracker,
         gossipDid: state.gossipDid,
-        partyStateHashesSize: state.witnessState.partyStateHashes.size,
-        partyStateGapsTrackerLength: state.witnessState.partyStateGapsTracker.length,
+        numberPartyStateHashes: state.witnessState.partyStateHashes.size,
+        numberPartyStateHashGaps: state.witnessState.partyStateGapsTracker.length,
+        knownWitnessDids: state.knownWitnesses,
       }
     }
     return this.witnessStateGeneralInfo
@@ -88,10 +84,11 @@ export class ValueTransferStateService implements StorageInterface {
     record.witnessState = witnessState
     this.witnessStateGeneralInfo = {
       topWitness: record.topWitness,
+      lastUpdateTracker: record.witnessState.lastUpdateTracker,
       gossipDid: record.gossipDid,
-      lastUpdateTracker: witnessState.lastUpdateTracker,
-      partyStateHashesSize: witnessState.partyStateHashes.size,
-      partyStateGapsTrackerLength: witnessState.partyStateGapsTracker.length,
+      numberPartyStateHashes: record.witnessState.partyStateHashes.size,
+      numberPartyStateHashGaps: record.witnessState.partyStateGapsTracker.length,
+      knownWitnessDids: record.knownWitnesses,
     }
     await this.witnessStateRepository.update(record)
     // this.witnessStateRecord = record
