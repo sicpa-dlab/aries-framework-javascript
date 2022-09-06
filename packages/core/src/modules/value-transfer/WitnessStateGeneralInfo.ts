@@ -6,5 +6,5 @@ export interface WitnessStateGeneralInfo {
   gossipDid: string
   numberPartyStateHashes: number
   numberPartyStateHashGaps: number
-  knownWitnessDids: Array<WitnessInfo>
+  knownWitnessDids: Set<WitnessInfo>
 }

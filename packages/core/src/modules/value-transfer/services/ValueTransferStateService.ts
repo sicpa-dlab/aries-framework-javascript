@@ -50,7 +50,7 @@ export class ValueTransferStateService implements StorageInterface {
         gossipDid: state.gossipDid,
         numberPartyStateHashes: state.witnessState.partyStateHashes.size,
         numberPartyStateHashGaps: state.witnessState.partyStateGapsTracker.length,
-        knownWitnessDids: state.knownWitnesses,
+        knownWitnessDids: new Set(state.knownWitnesses),
       }
     }
     return this.witnessStateGeneralInfo
@@ -88,7 +88,7 @@ export class ValueTransferStateService implements StorageInterface {
       gossipDid: record.gossipDid,
       numberPartyStateHashes: record.witnessState.partyStateHashes.size,
       numberPartyStateHashGaps: record.witnessState.partyStateGapsTracker.length,
-      knownWitnessDids: record.knownWitnesses,
+      knownWitnessDids: new Set(record.knownWitnesses),
     }
     await this.witnessStateRepository.update(record)
     // this.witnessStateRecord = record
