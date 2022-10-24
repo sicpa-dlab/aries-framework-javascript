@@ -144,7 +144,11 @@ export class RecipientModule {
       })
       return Promise.reject('Failed to open mediation web socket')
     }
-    await this.pickupMessages(mediator)
+    try {
+      await this.pickupMessages(mediator)
+    } catch (e) {
+      this.agentConfig.logger.error(`Unable to send pickup message to mediator. Error: ${e}`)
+    }
   }
 
   private async initiateImplicitPickup(mediator: MediationRecord) {
