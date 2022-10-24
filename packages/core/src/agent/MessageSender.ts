@@ -312,7 +312,7 @@ export class MessageSender {
   public async findCommonSupportedService(
     sender?: string,
     recipient?: string,
-    priorityTransports?: Transports[]
+    priorityTransports: Transports[] = [Transports.HTTP, Transports.HTTPS]
   ): Promise<DidCommV2Service | undefined> {
     if (!recipient) return undefined
 

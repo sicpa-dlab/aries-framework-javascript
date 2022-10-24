@@ -144,6 +144,7 @@ export class RecipientModule {
       })
       return Promise.reject('Failed to open mediation web socket')
     }
+    await this.pickupMessages(mediator)
   }
 
   private async initiateImplicitPickup(mediator: MediationRecord) {
