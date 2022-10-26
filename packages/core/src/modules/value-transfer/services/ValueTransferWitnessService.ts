@@ -1,15 +1,14 @@
 import type { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
 import type { Logger } from '../../../logger'
 import type { ResumeValueTransferTransactionEvent } from '../ValueTransferEvents'
-import type { CashAcceptedMessage, CashRemovedMessage, RequestAcceptedMessage } from '../messages'
+import { CashAcceptedMessage, CashRemovedMessage, RequestAcceptedMessage } from '../messages'
 import type { MintMessage } from '../messages/MintMessage'
 import type { ValueTransferRecord } from '../repository'
 
-import { Witness, RequestAcceptance, CashRemoval, CashAcceptance, Mint } from '@sicpa-dlab/value-transfer-protocol-ts'
+import { Witness, RequestAcceptance, CashRemoval, CashAcceptance, Mint, ProblemReport } from '@sicpa-dlab/value-transfer-protocol-ts'
 
 import { AgentConfig } from '../../../agent/AgentConfig'
 import { EventEmitter } from '../../../agent/EventEmitter'
-import { AriesFrameworkError } from '../../../error'
 import { injectable } from '../../../plugins'
 import { GossipService } from '../../gossip/service/GossipService'
 import { ValueTransferEventTypes } from '../ValueTransferEvents'
@@ -19,6 +18,8 @@ import { ValueTransferCryptoService } from './ValueTransferCryptoService'
 import { ValueTransferService } from './ValueTransferService'
 import { ValueTransferTransportService } from './ValueTransferTransportService'
 import { ValueTransferWitnessStateService } from './ValueTransferWitnessStateService'
+import { ErrorCodes } from '@sicpa-dlab/value-transfer-common-ts'
+import { AriesFrameworkError, DIDCommV2Message } from '@aries-framework/core'
 
 @injectable()
 export class ValueTransferWitnessService {
@@ -90,6 +91,19 @@ export class ValueTransferWitnessService {
     const requestAcceptance = new RequestAcceptance(requestAcceptanceMessage)
     const { error, transaction } = await this.witness.processRequestAcceptance(requestAcceptance)
     if (error || !transaction) {
+      const info = await this.gossipService.getWitnessDetails()
+      const problemReport = new ProblemReport({
+        from: info.did,
+        to: requestAcceptance.valueTransferMessage.giverId,
+        pthid: requestAcceptance.thid,
+        body: {
+          code: ErrorCodes.DuplicateTransaction,
+          comment: 'Transaction has already been processed',
+        },
+      })
+      const didComMessage = new DIDCommV2Message({ ...problemReport })
+      await this.valueTransferService.sendMessage(didComMessage)
+
       throw new AriesFrameworkError(`Failed to create Payment Request: ${error?.message}`)
     }
 
