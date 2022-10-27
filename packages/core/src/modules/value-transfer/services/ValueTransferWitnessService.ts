@@ -5,7 +5,7 @@ import { CashAcceptedMessage, CashRemovedMessage, RequestAcceptedMessage } from 
 import type { MintMessage } from '../messages/MintMessage'
 import type { ValueTransferRecord } from '../repository'
 
-import { Witness, RequestAcceptance, CashRemoval, CashAcceptance, Mint, ProblemReport, ProblemReportBody } from '@sicpa-dlab/value-transfer-protocol-ts'
+import { Witness, RequestAcceptance, CashRemoval, CashAcceptance, Mint, ProblemReport, ProblemReportBody, TransactionState } from '@sicpa-dlab/value-transfer-protocol-ts'
 
 import { AgentConfig } from '../../../agent/AgentConfig'
 import { EventEmitter } from '../../../agent/EventEmitter'
@@ -90,7 +90,7 @@ export class ValueTransferWitnessService {
     // Call VTP library to handle request acceptance
     const requestAcceptance = new RequestAcceptance(requestAcceptanceMessage)
     const { error, transaction } = await this.witness.processRequestAcceptance(requestAcceptance)
-    if (error || !transaction) {
+    if (error || !transaction || transaction.state == TransactionState.Failed) {
       await this.sendProblemReportMessage(requestAcceptance.valueTransferMessage.giverId, requestAcceptance.thid, {
         code: ErrorCodes.DuplicateTransaction,
         comment: 'Transaction has already been processed',

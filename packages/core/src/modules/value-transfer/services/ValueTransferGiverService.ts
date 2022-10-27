@@ -154,7 +154,7 @@ export class ValueTransferGiverService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(requestMessage.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction?.id || requestMessage.id)
 
     // Save second party Did
     record.secondPartyDid = requestMessage.from
