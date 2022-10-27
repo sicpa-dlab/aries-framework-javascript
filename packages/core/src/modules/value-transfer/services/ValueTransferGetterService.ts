@@ -226,13 +226,15 @@ export class ValueTransferGetterService {
 
       await this.sendProblemReportMessage(
         requestAcceptanceWitnessed.valueTransferMessage.getterId,
-        requestAcceptanceWitnessed.valueTransferMessage.giverId,
+        requestAcceptanceWitnessed.valueTransferMessage.witnessId,
         requestAcceptanceWitnessed.thid,
         {
           code: ErrorCodes.InvalidTransactionState,
           comment: 'Failed to process Request Acceptance',
         }
       )
+
+      this.logger.info(`Problem report message sent`)
     }
 
     // Raise event
