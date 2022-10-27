@@ -3,7 +3,7 @@ import type { Logger } from '../../../logger'
 import type { Transports } from '../../routing/types'
 import type { OfferMessage, RequestAcceptedWitnessedMessage, GetterReceiptMessage } from '../messages'
 import type { ValueTransferRecord } from '../repository'
-import type { Timeouts } from '@sicpa-dlab/value-transfer-protocol-ts'
+import { ProblemReport, ProblemReportBody, Timeouts } from '@sicpa-dlab/value-transfer-protocol-ts'
 
 import { Getter, GetterReceipt, Offer, RequestAcceptanceWitnessed } from '@sicpa-dlab/value-transfer-protocol-ts'
 
@@ -19,6 +19,8 @@ import { ValueTransferCryptoService } from './ValueTransferCryptoService'
 import { ValueTransferPartyStateService } from './ValueTransferPartyStateService'
 import { ValueTransferService } from './ValueTransferService'
 import { ValueTransferTransportService } from './ValueTransferTransportService'
+import { ErrorCodes } from '@sicpa-dlab/value-transfer-common-ts'
+import { DIDCommV2Message } from '@aries-framework/core'
 
 @injectable()
 export class ValueTransferGetterService {
@@ -221,6 +223,16 @@ export class ValueTransferGetterService {
     const { error, transaction, message } = await this.getter.acceptCash(requestAcceptanceWitnessed)
     if (error || !transaction || !message) {
       this.logger.error(`VTP: Failed to process Request Acceptance: ${error?.message}`)
+
+      await this.sendProblemReportMessage(
+        requestAcceptanceWitnessed.valueTransferMessage.getterId,
+        requestAcceptanceWitnessed.valueTransferMessage.giverId,
+        requestAcceptanceWitnessed.thid,
+        {
+          code: ErrorCodes.InvalidTransactionState,
+          comment: 'Failed to process Request Acceptance',
+        }
+      )
     }
 
     // Raise event
@@ -259,5 +271,16 @@ export class ValueTransferGetterService {
 
     this.logger.info(`< Getter: process receipt message for VTP transaction ${getterReceiptMessage.thid} completed!`)
     return { record }
+  }
+
+  private async sendProblemReportMessage(from: string, to: string, pthid: string, body: ProblemReportBody) {
+    const problemReport = new ProblemReport({
+      from,
+      to,
+      pthid,
+      body,
+    })
+    const didComMessage = new DIDCommV2Message({ ...problemReport })
+    await this.valueTransferService.sendMessage(didComMessage)
   }
 }
