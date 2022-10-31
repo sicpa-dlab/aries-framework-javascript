@@ -67,7 +67,10 @@ export class WsInboundTransport implements InboundTransport {
         logId: 'message-received',
       })
       try {
-        await agent.receiveMessage(JSON.parse(event.data), session)
+        const message = JSON.parse(event.data)
+        if (!message?.messageId || !message?.message) return
+        await agent.receiveMessage(message.message, session)
+        socket.send(JSON.stringify({ messageId: message.messageId, status: 'ok' }))
       } catch (error) {
         this.logger.error('Error processing message')
       }
@@ -90,7 +93,11 @@ export class WebSocketTransportSession implements TransportSession {
       throw new AriesFrameworkError(`${this.type} transport session has been closed.`)
     }
 
-    this.socket.send(JSON.stringify(encryptedMessage))
+    const wrappedMessage = {
+      messageId: utils.uuid(),
+      message: encryptedMessage
+    }
+    this.socket.send(JSON.stringify(wrappedMessage))
   }
 
   public async close(): Promise<void> {
