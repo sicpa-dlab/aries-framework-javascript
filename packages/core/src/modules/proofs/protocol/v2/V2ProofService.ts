@@ -85,7 +85,7 @@ export class V2ProofService<PFs extends ProofFormat[] = ProofFormat[]> extends P
   public async createProposal(
     agentContext: AgentContext,
     options: CreateProposalOptions<PFs>
-  ): Promise<{ proofRecord: ProofExchangeRecord; message: AgentMessage }> {
+  ): Promise<{ proofRecord: ProofExchangeRecord; message: DIDCommV1Message }> {
     const formats = []
     for (const key of Object.keys(options.proofFormats)) {
       const service = this.formatServiceMap[key]

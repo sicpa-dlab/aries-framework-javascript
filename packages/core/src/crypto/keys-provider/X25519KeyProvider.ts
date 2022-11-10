@@ -1,4 +1,4 @@
-import type { CreateKeyPairOptions, KeyPair, KeyProvider } from '../signing-provider/KeyProvider'
+import type { CreateKeyPairOptions, KeyPair, KeyProvider } from './/KeyProvider'
 
 import * as ed25519 from '@stablelib/ed25519'
 

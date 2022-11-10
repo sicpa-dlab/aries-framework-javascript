@@ -8,7 +8,7 @@ import { IndyWallet } from '../../wallet/IndyWallet'
 import { JwsService } from '../JwsService'
 import { Key } from '../Key'
 import { KeyType } from '../KeyType'
-import { KeyProviderRegistry } from '../signing-provider'
+import { KeyProviderRegistry } from '../keys-provider'
 
 import * as didJwsz6Mkf from './__fixtures__/didJwsz6Mkf'
 import * as didJwsz6Mkv from './__fixtures__/didJwsz6Mkv'

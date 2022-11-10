@@ -3,7 +3,7 @@ import type { IndyPool } from '../../../../ledger'
 import type * as Indy from 'indy-sdk'
 
 import { getAgentConfig, getAgentContext, mockFunction, mockProperty } from '../../../../../../tests/helpers'
-import { KeyProviderRegistry } from '../../../../../crypto/signing-provider'
+import { KeyProviderRegistry } from '../../../../../crypto/keys-provider'
 import { JsonTransformer } from '../../../../../utils/JsonTransformer'
 import { IndyWallet } from '../../../../../wallet/IndyWallet'
 import { IndyLedgerService } from '../../../../ledger/services/IndyLedgerService'

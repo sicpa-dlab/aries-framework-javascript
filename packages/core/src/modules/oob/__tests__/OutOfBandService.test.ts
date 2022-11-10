@@ -14,7 +14,7 @@ import {
 import { EventEmitter } from '../../../agent/EventEmitter'
 import { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
 import { KeyType, Key } from '../../../crypto'
-import { KeyProviderRegistry } from '../../../crypto/signing-provider'
+import { KeyProviderRegistry } from '../../../crypto/keys-provider'
 import { AriesFrameworkError } from '../../../error'
 import { IndyWallet } from '../../../wallet/IndyWallet'
 import { DidExchangeState } from '../../connections/models'
