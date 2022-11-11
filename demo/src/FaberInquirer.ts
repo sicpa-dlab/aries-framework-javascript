@@ -1,6 +1,6 @@
 import { clear } from 'console'
 import { textSync } from 'figlet'
-import inquirer from 'inquirer'
+import { prompt } from 'inquirer'
 
 import { BaseInquirer, ConfirmOptions } from './BaseInquirer'
 import { Faber } from './Faber'
@@ -43,7 +43,7 @@ export class FaberInquirer extends BaseInquirer {
   }
 
   private async getPromptChoice() {
-    if (this.faber.outOfBandId) return inquirer.prompt([this.inquireOptions(this.promptOptionsString)])
+    if (this.faber.outOfBandId) return prompt([this.inquireOptions(this.promptOptionsString)])
 
     const reducedOption = [
       PromptOptions.CreateConnection,
@@ -51,7 +51,7 @@ export class FaberInquirer extends BaseInquirer {
       PromptOptions.Restart,
       PromptOptions.CreateDID,
     ]
-    return inquirer.prompt([this.inquireOptions(reducedOption)])
+    return prompt([this.inquireOptions(reducedOption)])
   }
 
   public async processAnswer() {
@@ -89,7 +89,7 @@ export class FaberInquirer extends BaseInquirer {
   }
 
   public async exitUseCase(title: string) {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(title)])
+    const confirm = await prompt([this.inquireConfirmation(title)])
     if (confirm.options === ConfirmOptions.No) {
       return false
     } else if (confirm.options === ConfirmOptions.Yes) {
@@ -121,7 +121,7 @@ export class FaberInquirer extends BaseInquirer {
   }
 
   public async exit() {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.ConfirmTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.ConfirmTitle)])
     if (confirm.options === ConfirmOptions.No) {
       return
     } else if (confirm.options === ConfirmOptions.Yes) {
@@ -130,7 +130,7 @@ export class FaberInquirer extends BaseInquirer {
   }
 
   public async restart() {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.ConfirmTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.ConfirmTitle)])
     if (confirm.options === ConfirmOptions.No) {
       await this.processAnswer()
       return

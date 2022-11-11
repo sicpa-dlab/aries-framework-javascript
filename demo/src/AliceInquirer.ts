@@ -2,7 +2,7 @@ import type { CredentialExchangeRecord, ProofExchangeRecord } from '@aries-frame
 
 import { clear } from 'console'
 import { textSync } from 'figlet'
-import inquirer from 'inquirer'
+import { prompt } from 'inquirer'
 
 import { Alice } from './Alice'
 import { BaseInquirer, ConfirmOptions } from './BaseInquirer'
@@ -44,7 +44,7 @@ export class AliceInquirer extends BaseInquirer {
   }
 
   private async getPromptChoice() {
-    if (this.alice.connectionRecordFaberId) return inquirer.prompt([this.inquireOptions(this.promptOptionsString)])
+    if (this.alice.connectionRecordFaberId) return prompt([this.inquireOptions(this.promptOptionsString)])
 
     const reducedOption = [
       PromptOptions.ReceiveConnectionUrl,
@@ -53,7 +53,7 @@ export class AliceInquirer extends BaseInquirer {
       PromptOptions.Exit,
       PromptOptions.Restart,
     ]
-    return inquirer.prompt([this.inquireOptions(reducedOption)])
+    return prompt([this.inquireOptions(reducedOption)])
   }
 
   public async processAnswer() {
@@ -84,7 +84,7 @@ export class AliceInquirer extends BaseInquirer {
   }
 
   public async acceptCredentialOffer(credentialRecord: CredentialExchangeRecord) {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.CredentialOfferTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.CredentialOfferTitle)])
     if (confirm.options === ConfirmOptions.No) {
       await this.alice.agent.credentials.declineOffer(credentialRecord.id)
     } else if (confirm.options === ConfirmOptions.Yes) {
@@ -93,7 +93,7 @@ export class AliceInquirer extends BaseInquirer {
   }
 
   public async acceptProofRequest(proofRecord: ProofExchangeRecord) {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.ProofRequestTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.ProofRequestTitle)])
     if (confirm.options === ConfirmOptions.No) {
       await this.alice.agent.proofs.declineRequest(proofRecord.id)
     } else if (confirm.options === ConfirmOptions.Yes) {
@@ -103,7 +103,7 @@ export class AliceInquirer extends BaseInquirer {
 
   public async connection() {
     const title = Title.InvitationTitle
-    const getUrl = await inquirer.prompt([this.inquireInput(title)])
+    const getUrl = await prompt([this.inquireInput(title)])
     await this.alice.acceptConnection(getUrl.input)
     if (!this.alice.connected) return
 
@@ -133,7 +133,7 @@ export class AliceInquirer extends BaseInquirer {
   }
 
   public async exit() {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.ConfirmTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.ConfirmTitle)])
     if (confirm.options === ConfirmOptions.No) {
       return
     } else if (confirm.options === ConfirmOptions.Yes) {
@@ -142,7 +142,7 @@ export class AliceInquirer extends BaseInquirer {
   }
 
   public async restart() {
-    const confirm = await inquirer.prompt([this.inquireConfirmation(Title.ConfirmTitle)])
+    const confirm = await prompt([this.inquireConfirmation(Title.ConfirmTitle)])
     if (confirm.options === ConfirmOptions.No) {
       await this.processAnswer()
       return
