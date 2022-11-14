@@ -13,5 +13,6 @@ export interface AgentDependencies {
   EventEmitterClass: typeof EventEmitter
   fetch: typeof fetch
   WebSocketClass: typeof WebSocket
+  // FIXME: reference to didcomm should be removed from agent dependencies and passed via implementation
   didcomm: typeof didcomm
 }

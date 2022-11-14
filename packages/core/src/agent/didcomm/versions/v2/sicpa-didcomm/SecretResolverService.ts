@@ -1,9 +1,9 @@
 import type { Secret, SecretsResolver } from 'didcomm'
 
-import { InjectionSymbols } from '../../../constants'
-import { KeyType } from '../../../crypto'
-import { inject, injectable } from '../../../plugins'
-import { Wallet } from '../../../wallet/Wallet'
+import { InjectionSymbols } from '../../../../../constants'
+import { KeyType } from '../../../../../crypto'
+import { inject, injectable } from '../../../../../plugins'
+import { Wallet } from '../../../../../wallet/Wallet'
 
 export enum KeyFormat {
   Base58 = 'Base58',

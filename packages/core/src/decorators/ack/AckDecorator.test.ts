@@ -1,4 +1,4 @@
-import { DIDCommV1BaseMessage } from '../../agent/didcomm/v1/DIDCommV1BaseMessage'
+import { DIDCommV1BaseMessage } from '../../agent/didcomm/versions/v1'
 import { ClassValidationError } from '../../error/ClassValidationError'
 import { JsonTransformer } from '../../utils/JsonTransformer'
 import { MessageValidator } from '../../utils/MessageValidator'

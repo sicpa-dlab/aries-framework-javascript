@@ -6,22 +6,7 @@ export enum MessageType {
   Encrypted = 'encrypted',
 }
 
-export type ReceivedMessage = ReceivedEncryptedMessage | ReceivedSignedMessage | ReceivedPlainMessage
-
-export type ReceivedEncryptedMessage = {
-  type: MessageType.Encrypted
-  message: EncryptedMessage
-}
-
-export type ReceivedSignedMessage = {
-  type: MessageType.Signed
-  message: SignedMessage
-}
-
-export type ReceivedPlainMessage = {
-  type: MessageType.Plain
-  message: PlaintextMessage
-}
+export type ReceivedMessage = EncryptedMessage | SignedMessage | PlaintextMessage
 
 export type PlaintextMessage = PlaintextDIDCommV1Message | PlaintextDIDCommV2Message
 

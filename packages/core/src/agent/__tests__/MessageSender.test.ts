@@ -12,14 +12,14 @@ import testLogger from '../../../tests/logger'
 import { Key, KeyType } from '../../crypto'
 import { ReturnRouteTypes } from '../../decorators/transport/TransportDecorator'
 import { DidCommDocumentService } from '../../modules/didcomm'
-import { DidResolverService, DidDocument, VerificationMethod } from '../../modules/dids'
+import { DidDocument, DidResolverService, VerificationMethod } from '../../modules/dids'
 import { DidCommV1Service } from '../../modules/dids/domain/service/DidCommV1Service'
 import { verkeyToInstanceOfKey } from '../../modules/dids/helpers'
 import { OutOfBandRepository } from '../../modules/oob'
 import { InMemoryMessageRepository } from '../../storage/InMemoryMessageRepository'
+import { EnvelopeService as EnvelopeServiceImpl } from '../EnvelopeService'
 import { MessageSender } from '../MessageSender'
 import { TransportService } from '../TransportService'
-import { EnvelopeService as EnvelopeServiceImpl } from '../didcomm/EnvelopeService'
 import { createOutboundDIDCommV1Message } from '../helpers'
 
 import { DummyTransportSession } from './stubs'
@@ -81,7 +81,7 @@ describe('MessageSender', () => {
   }
 
   const enveloperService = new EnvelopeService()
-  const envelopeServicePackMessageMock = mockFunction(enveloperService.packMessageEncrypted)
+  const envelopeServicePackMessageMock = mockFunction(enveloperService.packMessage)
 
   const didResolverService = new DidResolverServiceMock()
   const didCommDocumentService = new DidCommDocumentServiceMock()

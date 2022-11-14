@@ -1,14 +1,13 @@
-import type { ParsedMessageType } from '../../../utils/messageType'
-import type { Constructor } from '../../../utils/mixins'
+import type { ParsedMessageType } from '../../../../utils/messageType'
+import type { Constructor } from '../../../../utils/mixins'
 import type { DIDCommV1BaseMessage } from '../v1/DIDCommV1BaseMessage'
-import type { Attachment } from 'didcomm'
 
 import { Expose } from 'class-transformer'
 import { IsArray, IsNumber, IsOptional, IsString, Matches } from 'class-validator'
 
-import { JsonEncoder } from '../../../utils'
-import { uuid } from '../../../utils/uuid'
-import { MessageIdRegExp, MessageTypeRegExp } from '../validation'
+import { JsonEncoder } from '../../../../utils'
+import { uuid } from '../../../../utils/uuid'
+import { MessageIdRegExp, MessageTypeRegExp } from '../../validation'
 
 export const ATTACHMENT_MEDIA_TYPE = 'application/json'
 
@@ -135,4 +134,31 @@ export class DIDCommV2BaseMessage {
     const attachment = id ? this.attachments?.find((attachment) => attachment.id === id) : this.attachments[0]
     return attachment ? DIDCommV2BaseMessage.unpackAttachmentAsJson(attachment) : null
   }
+}
+
+type Attachment = {
+  data: AttachmentData
+  id?: string
+  description?: string
+  filename?: string
+  media_type?: string
+  format?: string
+}
+
+type AttachmentData = Base64AttachmentData | JsonAttachmentData | LinksAttachmentData
+
+type Base64AttachmentData = {
+  base64: string
+  jws?: string
+}
+
+type JsonAttachmentData = {
+  json: any
+  jws?: string
+}
+
+type LinksAttachmentData = {
+  links: Array<string>
+  hash: string
+  jws?: string
 }

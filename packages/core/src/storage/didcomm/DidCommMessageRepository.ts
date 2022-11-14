@@ -1,5 +1,6 @@
 import type { AgentContext } from '../../agent'
-import type { DIDCommMessage, ConstructableDIDCommMessage } from '../../agent/didcomm'
+import type { AgentMessage } from '../../agent/AgentMessage'
+import type { ConstructableDIDCommMessage } from '../../agent/didcomm'
 import type { JsonObject } from '../../types'
 import type { DidCommMessageRole } from './DidCommMessageRole'
 
@@ -84,7 +85,7 @@ export class DidCommMessageRepository extends Repository<DidCommMessageRecord> {
 
 export interface SaveAgentMessageOptions {
   role: DidCommMessageRole
-  agentMessage: DIDCommMessage
+  agentMessage: AgentMessage
   associatedRecordId: string
 }
 

@@ -1,29 +1,21 @@
-import type { Logger } from '../../../logger'
-import type { EncryptedMessage, PlaintextMessage } from '../types'
-import type { AgentContext } from './../../context'
-import type { DIDCommV1Message } from './DIDCommV1Message'
+import type { PackMessageParams } from '..'
+import type { Logger } from '../../../../../logger'
+import type { AgentContext } from '../../../../context'
+import type { DecryptedMessageContext, EncryptedMessage, SignedMessage } from '../../../types'
+import type { DIDCommV1Message } from '../DIDCommV1Message'
 
-import { InjectionSymbols } from '../../../constants'
-import { Key, KeyType } from '../../../crypto'
-import { ForwardMessage } from '../../../modules/routing/messages'
-import { injectable, inject } from '../../../plugins'
-import { Wallet } from '../../../wallet/Wallet'
-import { AgentConfig } from '../../AgentConfig'
-
-export interface PackMessageParams {
-  recipientKeys: Key[]
-  routingKeys: Key[]
-  senderKey: Key | null
-}
-
-export interface DecryptedMessageContext {
-  plaintextMessage: PlaintextMessage
-  senderKey?: Key
-  recipientKey?: Key
-}
+import { DIDCommV1EnvelopeService } from '..'
+import { InjectionSymbols } from '../../../../../constants'
+import { Key, KeyType } from '../../../../../crypto'
+import { AriesFrameworkError } from '../../../../../error/AriesFrameworkError'
+import { ForwardMessage } from '../../../../../modules/routing/messages'
+import { inject, injectable } from '../../../../../plugins'
+import { Wallet } from '../../../../../wallet/Wallet'
+import { AgentConfig } from '../../../../AgentConfig'
+import { DIDCommMessageVersion, MessageType } from '../../../types'
 
 @injectable()
-class DIDCommV1EnvelopeService {
+export class DIDCommV1IndyEnvelopeService implements DIDCommV1EnvelopeService {
   private wallet: Wallet
   private logger: Logger
   private config: AgentConfig
@@ -34,12 +26,16 @@ class DIDCommV1EnvelopeService {
     this.config = agentConfig
   }
 
-  public async packMessageEncrypted(
+  public async packMessage(
     agentContext: AgentContext,
     payload: DIDCommV1Message,
-    keys: PackMessageParams
+    params: PackMessageParams
   ): Promise<EncryptedMessage> {
-    const { recipientKeys, routingKeys, senderKey } = keys
+    if (params.type === MessageType.Signed) {
+      throw new AriesFrameworkError('JWS messages are not supported by DIDComm V1 Indy service')
+    }
+
+    const { recipientKeys, routingKeys, senderKey } = params
     let recipientKeysBase58 = recipientKeys.map((key) => key.publicKeyBase58)
     const routingKeysBase58 = routingKeys.map((key) => key.publicKeyBase58)
     const senderKeyBase58 = senderKey && senderKey.publicKeyBase58
@@ -73,14 +69,15 @@ class DIDCommV1EnvelopeService {
 
   public async unpackMessage(
     agentContext: AgentContext,
-    encryptedMessage: EncryptedMessage
+    encryptedMessage: EncryptedMessage | SignedMessage
   ): Promise<DecryptedMessageContext> {
-    const decryptedMessage = await agentContext.wallet.unpack(encryptedMessage)
+    const decryptedMessage = await agentContext.wallet.unpack(encryptedMessage as EncryptedMessage)
     const { recipientKey, senderKey, plaintextMessage } = decryptedMessage
     return {
       recipientKey: recipientKey ? Key.fromPublicKeyBase58(recipientKey, KeyType.Ed25519) : undefined,
       senderKey: senderKey ? Key.fromPublicKeyBase58(senderKey, KeyType.Ed25519) : undefined,
       plaintextMessage,
+      version: DIDCommMessageVersion.V1,
     }
   }
 }

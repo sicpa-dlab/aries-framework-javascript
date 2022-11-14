@@ -1,5 +1,5 @@
 import type { ConnectionRecord } from '../modules/connections'
-import type { DIDCommMessage } from './didcomm'
+import type { AgentMessage } from './AgentMessage'
 import type { Observable } from 'rxjs'
 
 import { filter } from 'rxjs'
@@ -37,7 +37,7 @@ export interface AgentMessageReceivedEvent extends BaseEvent {
 export interface AgentMessageProcessedEvent extends BaseEvent {
   type: typeof AgentEventTypes.AgentMessageProcessed
   payload: {
-    message: DIDCommMessage
+    message: AgentMessage
     connection?: ConnectionRecord
   }
 }

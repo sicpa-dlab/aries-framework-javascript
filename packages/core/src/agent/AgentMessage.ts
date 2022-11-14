@@ -1,15 +1,14 @@
-import type { ServiceDecorator } from '../../decorators/service/ServiceDecorator'
-import type { ReturnRouteTypes, TransportDecorator } from '../../decorators/transport/TransportDecorator'
-import type { DIDCommMessageVersion } from './types'
+import type { ServiceDecorator } from '../decorators/service/ServiceDecorator'
+import type { ReturnRouteTypes } from '../decorators/transport/TransportDecorator'
+import type { DIDCommMessageVersion } from './didcomm/types'
 
-export interface DIDCommMessage {
+export interface AgentMessage {
   readonly type: string
-  readonly transport?: TransportDecorator | undefined
 
   get version(): DIDCommMessageVersion
   get id(): string
-  get threadId(): string | undefined
   get sender(): string | undefined
+  get threadId(): string | undefined
 
   serviceDecorator(): ServiceDecorator | undefined
 

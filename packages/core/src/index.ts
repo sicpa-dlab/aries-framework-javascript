@@ -12,14 +12,8 @@ export { Handler, HandlerInboundMessage } from './agent/Handler'
 export * from './agent/models'
 export * from './agent/helpers'
 export { AgentConfig } from './agent/AgentConfig'
-export {
-  DIDCommMessage,
-  DIDCommV1Message,
-  DIDCommV2Message,
-  EncryptedMessage,
-  SignedMessage,
-  PlaintextMessage,
-} from './agent/didcomm'
+export { DIDCommV1Message, DIDCommV2Message, EncryptedMessage, SignedMessage, PlaintextMessage } from './agent/didcomm'
+export { AgentMessage } from './agent/AgentMessage'
 export { Dispatcher } from './agent/Dispatcher'
 export { MessageSender } from './agent/MessageSender'
 export type { AgentDependencies } from './agent/AgentDependencies'

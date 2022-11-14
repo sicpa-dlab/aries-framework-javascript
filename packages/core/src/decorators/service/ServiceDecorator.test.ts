@@ -1,4 +1,4 @@
-import { DIDCommV1BaseMessage } from '../../agent/didcomm/v1/DIDCommV1BaseMessage'
+import { DIDCommV1BaseMessage } from '../../agent/didcomm/versions/v1'
 import { JsonTransformer } from '../../utils/JsonTransformer'
 import { Compose } from '../../utils/mixins'
 

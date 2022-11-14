@@ -25,6 +25,7 @@ import { AgentConfig } from './AgentConfig'
 import { extendModulesWithDefaultModules } from './AgentModules'
 import { BaseAgent } from './BaseAgent'
 import { Dispatcher } from './Dispatcher'
+import { EnvelopeService } from './EnvelopeService'
 import { EventEmitter } from './EventEmitter'
 import { AgentEventTypes } from './Events'
 import { FeatureRegistry } from './FeatureRegistry'
@@ -32,7 +33,8 @@ import { MessageReceiver } from './MessageReceiver'
 import { MessageSender } from './MessageSender'
 import { TransportService } from './TransportService'
 import { AgentContext, DefaultAgentContextProvider } from './context'
-import { EnvelopeService } from './didcomm/EnvelopeService'
+import { DIDCommV1IndyEnvelopeService } from './didcomm/versions/v1/indy/DIDCommV1EnvelopeService'
+import { DIDCommV2SicpaEnvelopeService } from './didcomm/versions/v2/sicpa-didcomm/DIDCommV2EnvelopeService'
 
 interface AgentOptions<AgentModules extends AgentModulesInput> {
   config: InitConfig
@@ -68,11 +70,16 @@ export class Agent<AgentModules extends AgentModulesInput = ModulesMap> extends 
     dependencyManager.registerInstance(InjectionSymbols.AgentDependencies, agentConfig.agentDependencies)
     dependencyManager.registerInstance(InjectionSymbols.Stop$, new Subject<boolean>())
     dependencyManager.registerInstance(InjectionSymbols.FileSystem, new agentConfig.agentDependencies.FileSystem())
+    dependencyManager.registerInstance(InjectionSymbols.AgentDependencies, agentConfig.agentDependencies)
 
     // Register possibly already defined services
     if (!dependencyManager.isRegistered(InjectionSymbols.Wallet)) {
       dependencyManager.registerContextScoped(InjectionSymbols.Wallet, IndyWallet)
     }
+
+    dependencyManager.registerContextScoped(InjectionSymbols.DIDCommV1EnvelopeService, DIDCommV1IndyEnvelopeService)
+    dependencyManager.registerContextScoped(InjectionSymbols.DIDCommV2EnvelopeService, DIDCommV2SicpaEnvelopeService)
+
     if (!dependencyManager.isRegistered(InjectionSymbols.Logger)) {
       dependencyManager.registerInstance(InjectionSymbols.Logger, agentConfig.logger)
     }

@@ -10,10 +10,11 @@ import type {
   OutboundPackage,
   OutboundPackagePayload,
 } from '../types'
+import type { AgentMessage } from './AgentMessage'
+import type { PackMessageParams } from './EnvelopeService'
 import type { TransportSession } from './TransportService'
 import type { AgentContext } from './context'
-import type { DIDCommMessage, DIDCommV2Message, EncryptedMessage } from './didcomm'
-import type { PackMessageParams } from './didcomm/EnvelopeService'
+import type { DIDCommV2Message, EncryptedMessage } from './didcomm'
 
 import { DID_COMM_TRANSPORT_QUEUE, InjectionSymbols } from '../constants'
 import { ReturnRouteTypes } from '../decorators/transport/TransportDecorator'
@@ -29,8 +30,8 @@ import { MessageRepository } from '../storage/MessageRepository'
 import { MessageValidator } from '../utils/MessageValidator'
 import { getProtocolScheme } from '../utils/uri'
 
+import { EnvelopeService } from './EnvelopeService'
 import { TransportService } from './TransportService'
-import { EnvelopeService } from './didcomm/EnvelopeService'
 import { DIDCommMessageVersion, MessageType } from './didcomm/types'
 
 export interface TransportPriorityOptions {
@@ -83,11 +84,11 @@ export class MessageSender {
       endpoint,
     }: {
       keys: PackMessageParams
-      message: DIDCommMessage
+      message: AgentMessage
       endpoint: string
     }
   ): Promise<OutboundPackage> {
-    const encryptedMessage = await this.envelopeService.packMessageEncrypted(agentContext, message, keys)
+    const encryptedMessage = await this.envelopeService.packMessage(agentContext, message, keys)
 
     return {
       payload: encryptedMessage,
@@ -96,12 +97,12 @@ export class MessageSender {
     }
   }
 
-  private async sendMessageToSession(agentContext: AgentContext, session: TransportSession, message: DIDCommMessage) {
+  private async sendMessageToSession(agentContext: AgentContext, session: TransportSession, message: AgentMessage) {
     this.logger.debug(`Existing ${session.type} transport session has been found.`)
     if (!session.keys) {
       throw new AriesFrameworkError(`There are no keys for the given ${session.type} transport session.`)
     }
-    const encryptedMessage = await this.envelopeService.packMessageEncrypted(agentContext, message, session.keys)
+    const encryptedMessage = await this.envelopeService.packMessage(agentContext, message, session.keys)
     await session.send(encryptedMessage)
   }
 
@@ -307,7 +308,7 @@ export class MessageSender {
         senderKey: firstOurAuthenticationKey,
       }
 
-      const encryptedMessage = await this.envelopeService.packMessageEncrypted(agentContext, payload, keys)
+      const encryptedMessage = await this.envelopeService.packMessage(agentContext, payload, keys)
       await this.messageRepository.add(connection.id, encryptedMessage)
       return
     }
@@ -333,7 +334,7 @@ export class MessageSender {
       returnRoute,
       connectionId,
     }: {
-      message: DIDCommMessage
+      message: AgentMessage
       service: ResolvedDidCommService
       senderKey: Key
       returnRoute?: boolean
@@ -564,8 +565,8 @@ export class MessageSender {
       if (!message.from) {
         throw new AriesFrameworkError(`Unable to send message signed. Message doesn't contain sender DID.`)
       }
-      const params = { signByDID: message.from, serviceId: service?.id }
-      return this.envelopeService.packMessageSigned(agentContext, message, params)
+      const params = { signByDID: message.from, serviceId: service?.id, type: MessageType.Signed }
+      return this.envelopeService.packMessage(agentContext, message, params)
     }
 
     return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, pack)
@@ -606,8 +607,9 @@ export class MessageSender {
       signByDID: undefined,
       serviceId: service?.id,
       forward,
+      type: MessageType.Encrypted,
     }
-    return this.envelopeService.packMessageEncrypted(agentContext, message, params)
+    return this.envelopeService.packMessage(agentContext, message, params)
   }
 
   public async sendOutboundDIDCommV2Message(

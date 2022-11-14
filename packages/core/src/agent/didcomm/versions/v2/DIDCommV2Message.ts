@@ -1,16 +1,16 @@
-import type { ServiceDecorator } from '../../../decorators/service/ServiceDecorator'
-import type { DIDCommMessage } from '../DIDCommMessage'
+import type { ServiceDecorator } from '../../../../decorators/service/ServiceDecorator'
+import type { AgentMessage } from '../../../AgentMessage'
 
 import { parseUrl } from 'query-string'
 
-import { AriesFrameworkError } from '../../../error'
-import { JsonEncoder } from '../../../utils'
-import { JsonTransformer } from '../../../utils/JsonTransformer'
-import { DIDCommMessageVersion } from '../types'
+import { AriesFrameworkError } from '../../../../error'
+import { JsonEncoder } from '../../../../utils'
+import { JsonTransformer } from '../../../../utils/JsonTransformer'
+import { DIDCommMessageVersion } from '../../types'
 
 import { DIDCommV2BaseMessage } from './DIDCommV2BaseMessage'
 
-export class DIDCommV2Message extends DIDCommV2BaseMessage implements DIDCommMessage {
+export class DIDCommV2Message extends DIDCommV2BaseMessage implements AgentMessage {
   public toJSON(): Record<string, unknown> {
     return JsonTransformer.toJSON(this)
   }

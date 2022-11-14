@@ -2,7 +2,7 @@ import { TestMessage } from '../../../tests/TestMessage'
 import { ClassValidationError } from '../../error/ClassValidationError'
 import { JsonTransformer } from '../../utils'
 import { IsValidMessageType, parseMessageType } from '../../utils/messageType'
-import { DIDCommV1Message } from '../didcomm/v1/DIDCommV1Message'
+import { DIDCommV1Message } from '../didcomm/versions/v1/DIDCommV1Message'
 
 class CustomProtocolMessage extends DIDCommV1Message {
   @IsValidMessageType(CustomProtocolMessage.type)

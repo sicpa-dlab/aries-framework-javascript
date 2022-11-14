@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type { Wallet } from '../../src'
-import type { KeyPair } from '../../src'
+import type { Wallet, KeyPair } from '../../src'
 import type { EncryptedMessage } from '../../src/agent/didcomm/types'
 import type { Key } from '../../src/crypto'
 import type { WalletConfig, WalletExportImportConfig, WalletConfigRekey } from '../../src/types'

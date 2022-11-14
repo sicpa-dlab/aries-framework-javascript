@@ -1,20 +1,19 @@
-import type { DidResolutionResult } from '../../../../modules/dids/types'
-import type { EncryptedMessage } from '../../types'
-import type { DIDCommV2MessageParams } from '../DIDCommV2BaseMessage'
-import type { PlaintextMessage } from '../DIDCommV2EnvelopeService'
-import type { AgentContextProvider } from './../../../context'
+import type { DidResolutionResult } from '../../../../../../modules/dids/types'
+import type { AgentContextProvider } from '../../../../../context'
+import type { EncryptedMessage, PlaintextMessage } from '../../../../types'
+import type { DIDCommV2MessageParams } from '../../DIDCommV2BaseMessage'
 import type { Secret } from 'didcomm'
 
-import { getAgentConfig, getAgentContext, mockFunction } from '../../../../../tests/helpers'
-import { DidDocument } from '../../../../modules/dids/domain/DidDocument'
-import { DidCommV2Service } from '../../../../modules/dids/domain/service/DidCommV2Service'
-import { VerificationMethod } from '../../../../modules/dids/domain/verificationMethod/VerificationMethod'
-import { DidResolverService } from '../../../../modules/dids/services/DidResolverService'
-import { IsValidMessageType, parseMessageType } from '../../../../utils/messageType'
-import { isJsonObject } from '../../../../utils/type'
-import { DefaultAgentContextProvider } from '../../../context/DefaultAgentContextProvider'
-import { DIDCommV2EnvelopeService } from '../DIDCommV2EnvelopeService'
-import { DIDCommV2Message } from '../DIDCommV2Message'
+import { getAgentConfig, getAgentContext, mockFunction } from '../../../../../../../tests/helpers'
+import { DidDocument } from '../../../../../../modules/dids/domain/DidDocument'
+import { DidCommV2Service } from '../../../../../../modules/dids/domain/service/DidCommV2Service'
+import { VerificationMethod } from '../../../../../../modules/dids/domain/verificationMethod/VerificationMethod'
+import { DidResolverService } from '../../../../../../modules/dids/services/DidResolverService'
+import { IsValidMessageType, parseMessageType } from '../../../../../../utils/messageType'
+import { isJsonObject } from '../../../../../../utils/type'
+import { DefaultAgentContextProvider } from '../../../../../context/DefaultAgentContextProvider'
+import { DIDCommV2Message } from '../../DIDCommV2Message'
+import { DIDCommV2SicpaEnvelopeService } from '../DIDCommV2EnvelopeService'
 import { DIDResolverService } from '../DIDResolverService'
 import { SecretResolverService } from '../SecretResolverService'
 
@@ -234,14 +233,22 @@ describe('DIDCommV2EnvelopeService', () => {
   const mediator1SecretResolverService = oneKeySecretResolverService(mediator1Secret)
   const mediator2SecretResolverService = oneKeySecretResolverService(mediator2Secret)
 
-  const aliceEnvelopeService = new DIDCommV2EnvelopeService(agentConfig, didResolverService, aliceSecretResolverService)
-  const bobEnvelopeService = new DIDCommV2EnvelopeService(agentConfig, didResolverService, bobSecretResolverService)
-  const mediator1EnvelopeService = new DIDCommV2EnvelopeService(
+  const aliceEnvelopeService = new DIDCommV2SicpaEnvelopeService(
+    agentConfig,
+    didResolverService,
+    aliceSecretResolverService
+  )
+  const bobEnvelopeService = new DIDCommV2SicpaEnvelopeService(
+    agentConfig,
+    didResolverService,
+    bobSecretResolverService
+  )
+  const mediator1EnvelopeService = new DIDCommV2SicpaEnvelopeService(
     agentConfig,
     didResolverService,
     mediator1SecretResolverService
   )
-  const mediator2EnvelopeService = new DIDCommV2EnvelopeService(
+  const mediator2EnvelopeService = new DIDCommV2SicpaEnvelopeService(
     agentConfig,
     didResolverService,
     mediator2SecretResolverService
@@ -255,7 +262,7 @@ describe('DIDCommV2EnvelopeService', () => {
       },
     }) as DIDCommV2Message
 
-    const packedForMediator1 = await aliceEnvelopeService.packMessageEncrypted(agentContext, message, {
+    const packedForMediator1 = await aliceEnvelopeService.packMessage(agentContext, message, {
       toDID: 'did:example:bob',
     })
 

@@ -1,13 +1,13 @@
-import type { VerificationMethod, DidDocumentService } from '../../../modules/dids/domain'
-import type { AgentContext } from '../../context'
+import type { VerificationMethod, DidDocumentService } from '../../../../../modules/dids/domain'
+import type { AgentContext } from '../../../../context'
 import type { DIDDoc, DIDResolver } from 'didcomm'
 
-import { InjectionSymbols } from '../../../constants'
-import { AriesFrameworkError } from '../../../error'
-import { DidCommV1Service, DidCommV2Service, IndyAgentService } from '../../../modules/dids/domain'
-import { DidResolverService } from '../../../modules/dids/services/DidResolverService'
-import { inject, injectable } from '../../../plugins'
-import { AgentContextProvider } from '../../context'
+import { InjectionSymbols } from '../../../../../constants'
+import { AriesFrameworkError } from '../../../../../error'
+import { DidCommV1Service, DidCommV2Service, IndyAgentService } from '../../../../../modules/dids/domain'
+import { DidResolverService } from '../../../../../modules/dids/services/DidResolverService'
+import { inject, injectable } from '../../../../../plugins'
+import { AgentContextProvider } from '../../../../context'
 
 @injectable()
 export class DIDResolverService implements DIDResolver {

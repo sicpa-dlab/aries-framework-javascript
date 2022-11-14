@@ -1,9 +1,10 @@
 import type { ConnectionRecord } from '../modules/connections'
 import type { InboundTransport } from '../transport'
+import type { AgentMessage } from './AgentMessage'
 import type { TransportSession } from './TransportService'
 import type { AgentContext } from './context'
-import type { DIDCommMessage, DIDCommV2Message, PlaintextMessage } from './didcomm'
-import type { DecryptedMessageContext, ReceivedMessage, ReceivedPlainMessage } from './didcomm/types'
+import type { DIDCommV2Message, PlaintextMessage } from './didcomm'
+import type { DecryptedMessageContext, ReceivedMessage } from './didcomm/types'
 
 import { InjectionSymbols } from '../constants'
 import { AriesFrameworkError } from '../error'
@@ -16,10 +17,10 @@ import { JsonTransformer } from '../utils/JsonTransformer'
 import { canHandleMessageType, parseMessageType, replaceLegacyDidSovPrefixOnMessage } from '../utils/messageType'
 
 import { Dispatcher } from './Dispatcher'
+import { EnvelopeService } from './EnvelopeService'
 import { MessageSender } from './MessageSender'
 import { TransportService } from './TransportService'
 import { AgentContextProvider } from './context'
-import { EnvelopeService } from './didcomm/EnvelopeService'
 import { getPlaintextMessageType, isEncryptedMessage, isPlaintextMessage, isSignedMessage } from './didcomm/helpers'
 import { DIDCommMessageVersion, MessageType } from './didcomm/types'
 import { createOutboundDIDCommV1Message } from './helpers'
@@ -83,30 +84,14 @@ export class MessageReceiver {
       if (isEncryptedMessage(inboundMessage)) {
         return await this.receiveEncryptedMessage(
           agentContext,
-          {
-            type: MessageType.Encrypted,
-            message: inboundMessage,
-          },
+          inboundMessage,
+          { type: MessageType.Encrypted },
           session
         )
       } else if (isSignedMessage(inboundMessage)) {
-        return await this.receiveEncryptedMessage(
-          agentContext,
-          {
-            type: MessageType.Signed,
-            message: inboundMessage,
-          },
-          session
-        )
+        return await this.receiveEncryptedMessage(agentContext, inboundMessage, { type: MessageType.Signed }, session)
       } else if (isPlaintextMessage(inboundMessage)) {
-        await this.receivePlaintextMessage(
-          agentContext,
-          {
-            type: MessageType.Plain,
-            message: inboundMessage,
-          },
-          connection
-        )
+        await this.receivePlaintextMessage(agentContext, inboundMessage, connection)
       } else {
         throw new AriesFrameworkError('Unable to parse incoming message: unrecognized format')
       }
@@ -118,10 +103,10 @@ export class MessageReceiver {
 
   private async receivePlaintextMessage(
     agentContext: AgentContext,
-    plaintextMessage: ReceivedPlainMessage,
+    plaintextMessage: PlaintextMessage,
     connection?: ConnectionRecord
   ) {
-    const message = await this.transformAndValidate(agentContext, plaintextMessage.message)
+    const message = await this.transformAndValidate(agentContext, plaintextMessage)
     const messageContext = new InboundMessageContext(message, { connection, agentContext })
     await this.dispatcher.dispatch(messageContext)
   }
@@ -129,9 +114,10 @@ export class MessageReceiver {
   private async receiveEncryptedMessage(
     agentContext: AgentContext,
     packedMessage: ReceivedMessage,
+    params: { type: MessageType },
     session?: TransportSession
   ) {
-    const decryptedMessage = await this.decryptMessage(agentContext, packedMessage)
+    const decryptedMessage = await this.decryptMessage(agentContext, packedMessage, params)
     const { plaintextMessage, senderKey, recipientKey, version } = decryptedMessage
 
     this.logger.info(
@@ -188,9 +174,13 @@ export class MessageReceiver {
    *
    * @param message the received inbound message to decrypt
    */
-  private async decryptMessage(agentContext: AgentContext, message: ReceivedMessage): Promise<DecryptedMessageContext> {
+  private async decryptMessage(
+    agentContext: AgentContext,
+    message: ReceivedMessage,
+    params: { type: MessageType }
+  ): Promise<DecryptedMessageContext> {
     try {
-      return await this.envelopeService.unpackMessage(agentContext, message)
+      return await this.envelopeService.unpackMessage(agentContext, message, params)
     } catch (error) {
       this.logger.error('Error while decrypting message', {
         error,
@@ -205,8 +195,8 @@ export class MessageReceiver {
     agentContext: AgentContext,
     plaintextMessage: PlaintextMessage,
     connection?: ConnectionRecord | null
-  ): Promise<DIDCommMessage> {
-    let message: DIDCommMessage
+  ): Promise<AgentMessage> {
+    let message: AgentMessage
     try {
       message = await this.transformMessage(plaintextMessage)
     } catch (error) {
@@ -239,7 +229,7 @@ export class MessageReceiver {
    *
    * @param message the plaintext message for which to transform the message in to a class instance
    */
-  private async transformMessage(message: PlaintextMessage): Promise<DIDCommMessage> {
+  private async transformMessage(message: PlaintextMessage): Promise<AgentMessage> {
     // replace did:sov:BzCbsNYhMrjHiqZDTUASHg;spec prefix for message type with https://didcomm.org
     if (message['@type']) {
       // replace did:sov:BzCbsNYhMrjHiqZDTUASHg;spec prefix for record type with https://didcomm.org
@@ -260,7 +250,7 @@ export class MessageReceiver {
     }
 
     // Cast the plain JSON object to specific instance of Message extended from DIDCommMessage
-    let messageTransformed: DIDCommMessage
+    let messageTransformed: AgentMessage
     try {
       messageTransformed = JsonTransformer.fromJSON(message, MessageClass)
     } catch (error) {
