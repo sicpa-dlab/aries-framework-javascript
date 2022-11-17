@@ -3,6 +3,7 @@ import type { OutOfBandRecord } from '../oob/repository'
 import type { ConnectionType } from './models'
 import type { ConnectionRecord } from './repository/ConnectionRecord'
 import type { Routing } from './services'
+import type { V2OutOfBandInvitation } from '@aries-framework/core'
 
 import { AgentContext } from '../../agent'
 import { Dispatcher } from '../../agent/Dispatcher'
@@ -13,8 +14,10 @@ import { AriesFrameworkError } from '../../error'
 import { injectable } from '../../plugins'
 import { DidResolverService } from '../dids'
 import { DidRepository } from '../dids/repository'
+import { DidService } from '../dids/services/DidService'
 import { OutOfBandService } from '../oob/OutOfBandService'
-import { RoutingService } from '../routing/services/RoutingService'
+import { OutOfBandGoalCode } from '../oob/messages/V2OutOfBandInvitation'
+import { MediationService } from '../routing/services/MediationService'
 
 import { ConnectionsModuleConfig } from './ConnectionsModuleConfig'
 import { DidExchangeProtocol } from './DidExchangeProtocol'
@@ -30,7 +33,7 @@ import {
   TrustPingResponseV2MessageHandler,
   TrustPingV2MessageHandler,
 } from './handlers'
-import { HandshakeProtocol } from './models'
+import { DidExchangeRole, DidExchangeState, HandshakeProtocol } from './models'
 import { ConnectionService } from './services/ConnectionService'
 import { TrustPingService } from './services/TrustPingService'
 
@@ -43,10 +46,11 @@ export class ConnectionsApi {
 
   private didExchangeProtocol: DidExchangeProtocol
   private connectionService: ConnectionService
+  private didService: DidService
   private outOfBandService: OutOfBandService
   private messageSender: MessageSender
   private trustPingService: TrustPingService
-  private routingService: RoutingService
+  private routingService: MediationService
   private didRepository: DidRepository
   private didResolverService: DidResolverService
   private agentContext: AgentContext
@@ -55,9 +59,10 @@ export class ConnectionsApi {
     dispatcher: Dispatcher,
     didExchangeProtocol: DidExchangeProtocol,
     connectionService: ConnectionService,
+    didService: DidService,
     outOfBandService: OutOfBandService,
     trustPingService: TrustPingService,
-    routingService: RoutingService,
+    routingService: MediationService,
     didRepository: DidRepository,
     didResolverService: DidResolverService,
     messageSender: MessageSender,
@@ -66,6 +71,7 @@ export class ConnectionsApi {
   ) {
     this.didExchangeProtocol = didExchangeProtocol
     this.connectionService = connectionService
+    this.didService = didService
     this.outOfBandService = outOfBandService
     this.trustPingService = trustPingService
     this.routingService = routingService
@@ -266,6 +272,33 @@ export class ConnectionsApi {
     const message = await this.trustPingService.pingV2(this.agentContext, fromDid, toDid)
     const outboundMessage = createOutboundDIDCommV2Message(message)
     await this.messageSender.sendMessage(this.agentContext, outboundMessage)
+  }
+
+  public async acceptOutOfBandInvitationV2(
+    invitation: V2OutOfBandInvitation
+  ): Promise<{ connectionRecord: ConnectionRecord | undefined }> {
+    if (invitation.body.goalCode === OutOfBandGoalCode.MediatorProvision) {
+      // Right now we do not support any did-exchange protocol for DIDComm V2
+      // So we just create Connection object with provided DID's instantly in completed state
+      const didResult = await this.didService.createDID(this.agentContext, { method: 'peer' })
+      if (!didResult.didState.did) {
+        throw new AriesFrameworkError(`Unable to create DID for mediator.`)
+      }
+
+      const connectionRecord = await this.connectionService.createConnection(this.agentContext, {
+        protocol: HandshakeProtocol.DidExchange,
+        role: DidExchangeRole.Requester,
+        state: DidExchangeState.Completed,
+        theirLabel: invitation.body.goal,
+        outOfBandId: invitation.id,
+        invitationDid: invitation.from,
+        theirDid: invitation.from,
+        did: didResult.didState.did,
+      })
+      return { connectionRecord }
+    }
+
+    return { connectionRecord: undefined }
   }
 
   /**

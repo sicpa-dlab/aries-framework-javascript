@@ -7,7 +7,7 @@ import { parseUrl } from 'query-string'
 import { AriesFrameworkError } from '../error'
 import { ConnectionInvitationMessage } from '../modules/connections'
 import { convertToNewInvitation } from '../modules/oob/helpers'
-import { OutOfBandInvitation } from '../modules/oob/messages'
+import { OutOfBandInvitation, V2OutOfBandInvitation } from '../modules/oob/messages'
 
 import { JsonTransformer } from './JsonTransformer'
 import { MessageValidator } from './MessageValidator'
@@ -39,11 +39,14 @@ const fetchShortUrl = async (invitationUrl: string, dependencies: AgentDependenc
  *
  * @returns OutOfBandInvitation
  */
-export const parseInvitationUrl = (invitationUrl: string): OutOfBandInvitation => {
+export const parseInvitationUrl = (invitationUrl: string): OutOfBandInvitation | V2OutOfBandInvitation => {
   const parsedUrl = parseUrl(invitationUrl).query
   if (parsedUrl['oob']) {
-    const outOfBandInvitation = OutOfBandInvitation.fromUrl(invitationUrl)
-    return outOfBandInvitation
+    try {
+      return OutOfBandInvitation.fromUrl(invitationUrl)
+    } catch (e) {
+      return V2OutOfBandInvitation.fromLink({ url: invitationUrl })
+    }
   } else if (parsedUrl['c_i'] || parsedUrl['d_m']) {
     const invitation = ConnectionInvitationMessage.fromUrl(invitationUrl)
     return convertToNewInvitation(invitation)
@@ -54,7 +57,9 @@ export const parseInvitationUrl = (invitationUrl: string): OutOfBandInvitation =
 }
 
 //This currently does not follow the RFC because of issues with fetch, currently uses a janky work around
-export const oobInvitationFromShortUrl = async (response: Response): Promise<OutOfBandInvitation> => {
+export const oobInvitationFromShortUrl = async (
+  response: Response
+): Promise<OutOfBandInvitation | V2OutOfBandInvitation> => {
   if (response) {
     if (response.headers.get('Content-Type')?.startsWith('application/json') && response.ok) {
       const invitationJson = await response.json()
@@ -97,7 +102,7 @@ export const oobInvitationFromShortUrl = async (response: Response): Promise<Out
 export const parseInvitationShortUrl = async (
   invitationUrl: string,
   dependencies: AgentDependencies
-): Promise<OutOfBandInvitation> => {
+): Promise<OutOfBandInvitation | V2OutOfBandInvitation> => {
   const parsedUrl = parseUrl(invitationUrl).query
   if (parsedUrl['oob']) {
     const outOfBandInvitation = OutOfBandInvitation.fromUrl(invitationUrl)

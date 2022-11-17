@@ -1,7 +1,7 @@
 import type { Handler, HandlerInboundMessage } from '../../../agent/Handler'
 import type { DidRepository } from '../../dids/repository'
 import type { OutOfBandService } from '../../oob/OutOfBandService'
-import type { RoutingService } from '../../routing/services/RoutingService'
+import type { MediationService } from '../../routing/services/MediationService'
 import type { ConnectionsModuleConfig } from '../ConnectionsModuleConfig'
 import type { ConnectionService } from '../services/ConnectionService'
 
@@ -12,7 +12,7 @@ import { ConnectionRequestMessage } from '../messages'
 export class ConnectionRequestHandler implements Handler {
   private connectionService: ConnectionService
   private outOfBandService: OutOfBandService
-  private routingService: RoutingService
+  private routingService: MediationService
   private didRepository: DidRepository
   private connectionsModuleConfig: ConnectionsModuleConfig
   public supportedMessages = [ConnectionRequestMessage]
@@ -20,7 +20,7 @@ export class ConnectionRequestHandler implements Handler {
   public constructor(
     connectionService: ConnectionService,
     outOfBandService: OutOfBandService,
-    routingService: RoutingService,
+    routingService: MediationService,
     didRepository: DidRepository,
     connectionsModuleConfig: ConnectionsModuleConfig
   ) {

@@ -3,15 +3,16 @@ import type { DIDCommV1Message, PlaintextMessage } from '../../agent/didcomm'
 import type { Key } from '../../crypto'
 import type { Attachment } from '../../decorators/attachment/Attachment'
 import type { Query } from '../../storage/StorageService'
-import type { ConnectionInvitationMessage, ConnectionRecord, Routing } from '../connections'
+import type { ConnectionRecord, Routing, ConnectionInvitationMessage } from '../connections'
 import type { HandshakeReusedEvent } from './domain/OutOfBandEvents'
+import type { V2OutOfBandInvitation } from './messages'
 
 import { catchError, EmptyError, first, firstValueFrom, map, of, timeout } from 'rxjs'
 
 import { AgentContext } from '../../agent'
 import { Dispatcher } from '../../agent/Dispatcher'
 import { EventEmitter } from '../../agent/EventEmitter'
-import { filterContextCorrelationId, AgentEventTypes } from '../../agent/Events'
+import { AgentEventTypes, filterContextCorrelationId } from '../../agent/Events'
 import { MessageSender } from '../../agent/MessageSender'
 import { getPlaintextMessageType } from '../../agent/didcomm'
 import { createOutboundDIDCommV1Message } from '../../agent/helpers'
@@ -23,12 +24,12 @@ import { inject, injectable } from '../../plugins'
 import { DidCommMessageRepository, DidCommMessageRole } from '../../storage'
 import { JsonEncoder, JsonTransformer } from '../../utils'
 import { parseMessageType, supportsIncomingMessageType } from '../../utils/messageType'
-import { parseInvitationUrl, parseInvitationShortUrl } from '../../utils/parseInvitation'
+import { parseInvitationShortUrl, parseInvitationUrl } from '../../utils/parseInvitation'
 import { ConnectionsApi, DidExchangeState, HandshakeProtocol } from '../connections'
 import { DidCommDocumentService } from '../didcomm'
 import { DidKey } from '../dids'
 import { didKeyToVerkey } from '../dids/helpers'
-import { RoutingService } from '../routing/services/RoutingService'
+import { MediationService } from '../routing/services/MediationService'
 
 import { OutOfBandService } from './OutOfBandService'
 import { OutOfBandDidCommService } from './domain/OutOfBandDidCommService'
@@ -80,7 +81,7 @@ export interface ReceiveOutOfBandInvitationConfig {
 @injectable()
 export class OutOfBandApi {
   private outOfBandService: OutOfBandService
-  private routingService: RoutingService
+  private routingService: MediationService
   private connectionsApi: ConnectionsApi
   private didCommMessageRepository: DidCommMessageRepository
   private dispatcher: Dispatcher
@@ -94,7 +95,7 @@ export class OutOfBandApi {
     dispatcher: Dispatcher,
     didCommDocumentService: DidCommDocumentService,
     outOfBandService: OutOfBandService,
-    routingService: RoutingService,
+    routingService: MediationService,
     connectionsApi: ConnectionsApi,
     didCommMessageRepository: DidCommMessageRepository,
     messageSender: MessageSender,
@@ -282,8 +283,9 @@ export class OutOfBandApi {
    */
   public async receiveInvitationFromUrl(invitationUrl: string, config: ReceiveOutOfBandInvitationConfig = {}) {
     const message = await this.parseInvitationShortUrl(invitationUrl)
-
-    return this.receiveInvitation(message, config)
+    if (message instanceof OutOfBandInvitation) {
+      return this.receiveInvitation(message, config)
+    }
   }
 
   /**
@@ -293,7 +295,7 @@ export class OutOfBandApi {
    *
    * @returns OutOfBandInvitation
    */
-  public parseInvitation(invitationUrl: string): OutOfBandInvitation {
+  public parseInvitation(invitationUrl: string): OutOfBandInvitation | V2OutOfBandInvitation {
     return parseInvitationUrl(invitationUrl)
   }
 
@@ -305,7 +307,7 @@ export class OutOfBandApi {
    *
    * @returns OutOfBandInvitation
    */
-  public async parseInvitationShortUrl(invitation: string): Promise<OutOfBandInvitation> {
+  public async parseInvitationShortUrl(invitation: string): Promise<OutOfBandInvitation | V2OutOfBandInvitation> {
     return await parseInvitationShortUrl(invitation, this.agentContext.config.agentDependencies)
   }
 
@@ -752,6 +754,10 @@ export class OutOfBandApi {
     await this.messageSender.sendMessage(this.agentContext, outbound)
 
     return reuseAcceptedEventPromise
+  }
+
+  public async acceptOutOfBandV2Invitation(invitation: V2OutOfBandInvitation) {
+    return this.connectionsApi.acceptOutOfBandInvitationV2(invitation)
   }
 
   private registerHandlers(dispatcher: Dispatcher) {

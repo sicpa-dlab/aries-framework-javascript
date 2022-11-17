@@ -7,13 +7,13 @@ export class Alice extends BaseAgent {
   public connected: boolean
   public connectionRecordFaberId?: string
 
-  public constructor(port: number, name: string) {
-    super(port, name)
+  public constructor(name: string, port?: number) {
+    super(name, port)
     this.connected = false
   }
 
   public static async build(): Promise<Alice> {
-    const alice = new Alice(9000, 'alice')
+    const alice = new Alice('alice')
     await alice.initializeAgent()
     return alice
   }
@@ -26,11 +26,11 @@ export class Alice extends BaseAgent {
   }
 
   private async receiveConnectionRequest(invitationUrl: string) {
-    const { connectionRecord } = await this.agent.oob.receiveInvitationFromUrl(invitationUrl)
-    if (!connectionRecord) {
+    const result = await this.agent.oob.receiveInvitationFromUrl(invitationUrl)
+    if (!result?.connectionRecord) {
       throw new Error(redText(Output.NoConnectionRecordFromOutOfBand))
     }
-    return connectionRecord
+    return result.connectionRecord
   }
 
   private async waitForConnection(connectionRecord: ConnectionRecord) {
@@ -72,9 +72,13 @@ export class Alice extends BaseAgent {
   }
 
   public async createNewDID() {
+    const mediator = await this.agent.mediationRecipient.findDefaultMediator()
     const { didState } = await this.agent.dids.createV2DID({
       method: 'peer',
-      routing: { endpoint: this.agent.config.endpoints[0] },
+      routing: {
+        endpoint: this.agent.config.endpoints[0],
+        mediator,
+      },
     })
     console.log(greenText(`\nNew DID Created!\n DID: ${didState.did}`))
   }

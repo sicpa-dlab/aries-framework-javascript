@@ -68,7 +68,7 @@ describe('out of band with mediation set up with provision method', () => {
     await aliceAgent.initialize()
     let { connectionRecord } = await aliceAgent.oob.receiveInvitation(mediatorOutOfBandInvitation)
     connectionRecord = await aliceAgent.connections.returnWhenIsConnected(connectionRecord!.id)
-    await aliceAgent.mediationRecipient.provision(connectionRecord!)
+    await aliceAgent.mediationRecipient.provision(connectionRecord!, mediatorOutOfBandInvitation)
     await aliceAgent.mediationRecipient.initialize()
   })
 
@@ -92,8 +92,9 @@ describe('out of band with mediation set up with provision method', () => {
     const { outOfBandInvitation } = outOfBandRecord
     const urlMessage = outOfBandInvitation.toUrl({ domain: 'http://example.com' })
 
-    let { connectionRecord: aliceFaberConnection } = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+    const result = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
 
+    let aliceFaberConnection = result!.connectionRecord
     aliceFaberConnection = await aliceAgent.connections.returnWhenIsConnected(aliceFaberConnection!.id)
     expect(aliceFaberConnection.state).toBe(DidExchangeState.Completed)
 
@@ -114,7 +115,7 @@ describe('out of band with mediation set up with provision method', () => {
     const [reusedAliceMediatorConnection] = reusedOutOfBandRecord
       ? await aliceAgent.connections.findAllByOutOfBandId(reusedOutOfBandRecord.id)
       : []
-    await aliceAgent.mediationRecipient.provision(reusedAliceMediatorConnection!)
+    await aliceAgent.mediationRecipient.provision(reusedAliceMediatorConnection!, mediatorOutOfBandInvitation)
     const mediators = await aliceAgent.mediationRecipient.getMediators()
     expect(mediators).toHaveLength(1)
   })

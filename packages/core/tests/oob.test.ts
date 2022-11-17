@@ -282,8 +282,10 @@ describe('out of band', () => {
       const urlMessage = outOfBandInvitation.toUrl({ domain: 'http://example.com' })
 
       // eslint-disable-next-line prefer-const
-      let { outOfBandRecord: receivedOutOfBandRecord, connectionRecord: aliceFaberConnection } =
-        await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      const aliceFaberResult = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      const receivedOutOfBandRecord = aliceFaberResult!.outOfBandRecord
+      let aliceFaberConnection = aliceFaberResult!.connectionRecord
+
       expect(receivedOutOfBandRecord.state).toBe(OutOfBandState.PrepareResponse)
 
       aliceFaberConnection = await aliceAgent.connections.returnWhenIsConnected(aliceFaberConnection!.id)
@@ -306,7 +308,8 @@ describe('out of band', () => {
       const { outOfBandInvitation } = outOfBandRecord
       const urlMessage = outOfBandInvitation.toUrl({ domain: 'http://example.com' })
 
-      let { connectionRecord: aliceFaberConnection } = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      const aliceFaberConnectionResult = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      let aliceFaberConnection = aliceFaberConnectionResult!.connectionRecord
 
       aliceFaberConnection = await aliceAgent.connections.returnWhenIsConnected(aliceFaberConnection!.id)
       expect(aliceFaberConnection.state).toBe(DidExchangeState.Completed)
@@ -324,7 +327,8 @@ describe('out of band', () => {
       const { outOfBandRecord, invitation } = await faberAgent.oob.createLegacyInvitation(makeConnectionConfig)
       const urlMessage = invitation.toUrl({ domain: 'http://example.com' })
 
-      let { connectionRecord: aliceFaberConnection } = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      const aliceFaberConnectionResult = await aliceAgent.oob.receiveInvitationFromUrl(urlMessage)
+      let aliceFaberConnection = aliceFaberConnectionResult!.connectionRecord
 
       aliceFaberConnection = await aliceAgent.connections.returnWhenIsConnected(aliceFaberConnection!.id)
       let [faberAliceConnection] = await faberAgent.connections.findAllByOutOfBandId(outOfBandRecord.id)

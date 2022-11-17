@@ -15,6 +15,7 @@ import { KeyProviderToken } from '../crypto'
 import { JwsService } from '../crypto/JwsService'
 import { X25519KeyProvider } from '../crypto/keys-provider/X25519KeyProvider'
 import { AriesFrameworkError } from '../error'
+import { V2OutOfBandInvitation, OutOfBandInvitation } from '../modules/oob/messages'
 import { DependencyManager } from '../plugins'
 import { DidCommMessageRepository, StorageUpdateService, StorageVersionRepository } from '../storage'
 import { InMemoryMessageRepository } from '../storage/InMemoryMessageRepository'
@@ -185,11 +186,12 @@ export class Agent<AgentModules extends AgentModulesInput = ModulesMap> extends 
       this.logger.debug('Provision mediation with invitation', {
         mediatorInvitationUrl: this.mediationRecipient.config.mediatorInvitationUrl,
       })
-      const mediationConnection = await this.getMediationConnection(
-        this.mediationRecipient.config.mediatorInvitationUrl
-      )
-      await this.mediationRecipient.provision(mediationConnection)
+
+      const outOfBandInvitation = this.oob.parseInvitation(this.mediationRecipient.config.mediatorInvitationUrl)
+      const mediationConnection = await this.getMediationConnection(outOfBandInvitation)
+      await this.mediationRecipient.provision(mediationConnection, outOfBandInvitation)
     }
+
     await this.mediator.initialize()
     await this.mediationRecipient.initialize()
 
@@ -214,8 +216,7 @@ export class Agent<AgentModules extends AgentModulesInput = ModulesMap> extends 
     this._isInitialized = false
   }
 
-  protected async getMediationConnection(mediatorInvitationUrl: string) {
-    const outOfBandInvitation = this.oob.parseInvitation(mediatorInvitationUrl)
+  protected async getMediationConnection(outOfBandInvitation: OutOfBandInvitation | V2OutOfBandInvitation) {
     const outOfBandRecord = await this.oob.findByInvitationId(outOfBandInvitation.id)
     const [connection] = outOfBandRecord ? await this.connections.findAllByOutOfBandId(outOfBandRecord.id) : []
 
@@ -225,16 +226,29 @@ export class Agent<AgentModules extends AgentModulesInput = ModulesMap> extends 
       const routing = await this.mediationRecipient.getRouting({ useDefaultMediator: false })
 
       this.logger.debug('Routing created', routing)
-      const { connectionRecord: newConnection } = await this.oob.receiveInvitation(outOfBandInvitation, {
-        routing,
-      })
-      this.logger.debug(`Mediation invitation processed`, { outOfBandInvitation })
 
-      if (!newConnection) {
-        throw new AriesFrameworkError('No connection record to provision mediation.')
+      if (outOfBandInvitation instanceof OutOfBandInvitation) {
+        const { connectionRecord: newConnection } = await this.oob.receiveInvitation(outOfBandInvitation, {
+          routing,
+        })
+        this.logger.debug(`Mediation invitation processed`, { outOfBandInvitation })
+
+        if (!newConnection) {
+          throw new AriesFrameworkError('No connection record to provision mediation.')
+        }
+
+        return this.connections.returnWhenIsConnected(newConnection.id)
       }
+      if (outOfBandInvitation instanceof V2OutOfBandInvitation) {
+        const { connectionRecord: newConnection } = await this.oob.acceptOutOfBandV2Invitation(outOfBandInvitation)
 
-      return this.connections.returnWhenIsConnected(newConnection.id)
+        this.logger.debug(`Mediation invitation processed`, { outOfBandInvitation })
+
+        if (!newConnection) {
+          throw new AriesFrameworkError('No connection record to provision mediation.')
+        }
+        return newConnection
+      }
     }
 
     if (!connection.isReady) {

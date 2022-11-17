@@ -18,8 +18,8 @@ import { DidCommV2Service } from '../domain/service'
 import { DidRegistrarService } from '../services/DidRegistrarService'
 
 export interface DIDRoutingParams {
-  endpoint?: string
-  mediator?: MediationRecord
+  endpoint?: string | null
+  mediator?: MediationRecord | null
 }
 
 export interface CreateDIDParams {

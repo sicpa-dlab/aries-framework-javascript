@@ -89,6 +89,12 @@ export function didToNumAlgo2DidDocument(did: string) {
         // FIXME: the peer did uses key identifiers without the multi base prefix
         // However method 0 (and thus did:key) do use the multi base prefix in the
         // key identifier. Fixing it like this for now, before making something more complex
+        //
+        // It looks like there is a contradiction between the two specifications:
+        // In Peer DID spec DIDs doesn't have z letter in the did-url (did fragment after #).
+        // In DIDComm spec DIDs have z letter in the did-url
+        // In our understanding, z prefix should be always used for multibase key representation which is used.
+        // Sicpa DIDComm-rust stores Peer DIDs from AFJ with the additional letter z at the start of the did-url when Peer DID itself doesn't have it.
         // verificationMethod.id = verificationMethod.id.replace('#z', '#')
         addVerificationMethodToDidDocument(didDocument, verificationMethod, purpose)
       }

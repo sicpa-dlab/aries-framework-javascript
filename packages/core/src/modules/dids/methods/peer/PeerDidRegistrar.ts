@@ -10,7 +10,7 @@ import { DidDocumentRole } from '../../domain/DidDocumentRole'
 import { DidRepository, DidRecord } from '../../repository'
 
 import { PeerDidNumAlgo } from './didPeer'
-import { didToNumAlgo0DidDocument, keyToNumAlgo0DidDocument } from './peerDidNumAlgo0'
+import { keyToNumAlgo0DidDocument } from './peerDidNumAlgo0'
 import { didDocumentJsonToNumAlgo1Did } from './peerDidNumAlgo1'
 import { didDocumentToNumAlgo2Did } from './peerDidNumAlgo2'
 
@@ -80,10 +80,7 @@ export class PeerDidRegistrar implements DidRegistrar {
         didDocument = JsonTransformer.fromJSON({ ...didDocumentJson, id: did }, DidDocument)
       } else if (isPeerDidGenericCreateOptions(options)) {
         const didDocumentJson = options.didDocument.toJSON()
-        const did =
-          options.didDocument.service && options.didDocument.service?.length > 0
-            ? didDocumentToNumAlgo2Did(options.didDocument)
-            : didToNumAlgo0DidDocument(options.didDocument.id)
+        const did = didDocumentToNumAlgo2Did(options.didDocument)
 
         didDocument = JsonTransformer.fromJSON({ ...didDocumentJson, id: did }, DidDocument)
       } else {

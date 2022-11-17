@@ -11,6 +11,7 @@ import type {
 
 import { AgentContext } from '../../agent'
 import { injectable } from '../../plugins'
+import { V2MediationRecipientService } from '../routing/protocol/coordinate-mediation/v2/V2MediationRecipientService'
 
 import { DidsModuleConfig } from './DidsModuleConfig'
 import { DidRepository } from './repository'
@@ -23,6 +24,7 @@ export class DidsApi {
 
   private didResolverService: DidResolverService
   private didRegistrarService: DidRegistrarService
+  private mediationRecipientService: V2MediationRecipientService
   private didService: DidService
   private didRepository: DidRepository
   private agentContext: AgentContext
@@ -30,6 +32,7 @@ export class DidsApi {
   public constructor(
     didResolverService: DidResolverService,
     didRegistrarService: DidRegistrarService,
+    mediationRecipientService: V2MediationRecipientService,
     didService: DidService,
     didRepository: DidRepository,
     agentContext: AgentContext,
@@ -37,6 +40,7 @@ export class DidsApi {
   ) {
     this.didResolverService = didResolverService
     this.didRegistrarService = didRegistrarService
+    this.mediationRecipientService = mediationRecipientService
     this.didService = didService
     this.didRepository = didRepository
     this.agentContext = agentContext
@@ -105,7 +109,15 @@ export class DidsApi {
     return this.didRepository.getCreatedDids(this.agentContext, { method })
   }
 
-  public createV2DID(options: CreateDIDParams): Promise<DidCreateResult> {
-    return this.didService.createDID(this.agentContext, options)
+  public async createV2DID(options: CreateDIDParams): Promise<DidCreateResult> {
+    const did = await this.didService.createDID(this.agentContext, options)
+    if (did.didState.did && options.routing?.mediator) {
+      await this.mediationRecipientService.didListUpdateAndAwait(
+        this.agentContext,
+        options.routing?.mediator,
+        did.didState.did
+      )
+    }
+    return did
   }
 }

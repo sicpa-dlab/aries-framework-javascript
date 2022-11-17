@@ -20,11 +20,11 @@ import { DID_COMM_TRANSPORT_QUEUE, InjectionSymbols } from '../constants'
 import { ReturnRouteTypes } from '../decorators/transport/TransportDecorator'
 import { AriesFrameworkError, MessageSendingError } from '../error'
 import { Logger } from '../logger'
-import { DidCommDocumentService } from '../modules/didcomm'
+import { DidCommDocumentService } from '../modules/didcomm/services/DidCommDocumentService'
 import { getKeyDidMappingByVerificationMethod } from '../modules/dids/domain/key-type'
 import { didKeyToInstanceOfKey } from '../modules/dids/helpers'
 import { DidResolverService } from '../modules/dids/services/DidResolverService'
-import { OutOfBandRepository } from '../modules/oob/repository'
+import { OutOfBandRepository } from '../modules/oob/repository/OutOfBandRepository'
 import { inject, injectable } from '../plugins'
 import { MessageRepository } from '../storage/MessageRepository'
 import { MessageValidator } from '../utils/MessageValidator'
@@ -650,6 +650,31 @@ export class MessageSender {
       }
     }
     this.logger.error(`Unable to send message ${message.id} through any commonly supported transport.`)
+  }
+
+  public async sendEncryptedPackage(
+    agentContext: AgentContext,
+    message: EncryptedMessage,
+    sender: string,
+    recipient: string
+  ) {
+    const senderToRecipientService = await this.findCommonSupportedServices(agentContext, recipient, sender)
+    if (!senderToRecipientService) {
+      this.logger.error(
+        `Unable to send message because there is no any commonly supported service between sender and recipient`
+      )
+      return
+    }
+
+    for (const service of senderToRecipientService) {
+      const outboundPackage = { payload: message, recipientDid: recipient, endpoint: service.serviceEndpoint }
+      for (const outboundTransport of this.outboundTransports) {
+        if (outboundTransport.supportedSchemes.includes(service.protocolScheme)) {
+          await outboundTransport.sendMessage(outboundPackage)
+          break
+        }
+      }
+    }
   }
 }
 
