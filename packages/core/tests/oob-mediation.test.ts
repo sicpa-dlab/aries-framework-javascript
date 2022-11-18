@@ -6,7 +6,6 @@ import { Subject } from 'rxjs'
 import { SubjectInboundTransport } from '../../../tests/transport/SubjectInboundTransport'
 import { SubjectOutboundTransport } from '../../../tests/transport/SubjectOutboundTransport'
 import { Agent } from '../src/agent/Agent'
-import { DIDCommMessageVersion } from '../src/agent/didcomm'
 import { DidExchangeState, HandshakeProtocol } from '../src/modules/connections'
 import { ConnectionType } from '../src/modules/connections/models/ConnectionType'
 import { MediationState, MediatorPickupStrategy } from '../src/modules/routing'
@@ -92,10 +91,7 @@ describe('out of band with mediation', () => {
     expect(mediatorAliceConnection.state).toBe(DidExchangeState.Completed)
 
     // ========== Set mediation between Alice and Mediator agents ==========
-    const mediationRecord = await aliceAgent.mediationRecipient.requestAndAwaitGrant(
-      aliceMediatorConnection,
-      DIDCommMessageVersion.V1
-    )
+    const mediationRecord = await aliceAgent.mediationRecipient.requestAndAwaitGrant(aliceMediatorConnection)
     const connectonTypes = await aliceAgent.connections.getConnectionTypes(mediationRecord.connectionId)
     expect(connectonTypes).toContain(ConnectionType.Mediator)
     await aliceAgent.connections.addConnectionType(mediationRecord.connectionId, 'test')

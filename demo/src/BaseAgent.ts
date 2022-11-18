@@ -5,7 +5,7 @@ import {
   AutoAcceptCredential,
   AutoAcceptProof,
   HttpOutboundTransport,
-  MediatorPickupStrategy,
+  WsOutboundTransport,
 } from '@aries-framework/core'
 import { agentDependencies, HttpInboundTransport } from '@aries-framework/node'
 
@@ -49,7 +49,6 @@ export class BaseAgent {
       autoAcceptCredentials: AutoAcceptCredential.ContentApproved,
       autoAcceptProofs: AutoAcceptProof.ContentApproved,
       mediatorConnectionsInvite: port ? undefined : mediatorConnectionsInvite,
-      mediatorPickupStrategy: MediatorPickupStrategy.PickUpV3,
     }
 
     this.config = config
@@ -57,6 +56,7 @@ export class BaseAgent {
     this.agent = new Agent({ config, dependencies: agentDependencies })
     if (port) this.agent.registerInboundTransport(new HttpInboundTransport({ port }))
     this.agent.registerOutboundTransport(new HttpOutboundTransport())
+    this.agent.registerOutboundTransport(new WsOutboundTransport())
   }
 
   public async initializeAgent() {

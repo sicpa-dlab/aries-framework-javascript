@@ -37,7 +37,7 @@ const fetchShortUrl = async (invitationUrl: string, dependencies: AgentDependenc
  *
  * @param invitationUrl URL containing encoded invitation
  *
- * @returns OutOfBandInvitation
+ * @returns DIDComm V1 OutOfBandInvitation or DIDComm V2 OutOfBandInvitation
  */
 export const parseInvitationUrl = (invitationUrl: string): OutOfBandInvitation | V2OutOfBandInvitation => {
   const parsedUrl = parseUrl(invitationUrl).query

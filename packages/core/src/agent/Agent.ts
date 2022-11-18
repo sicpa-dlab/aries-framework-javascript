@@ -189,7 +189,7 @@ export class Agent<AgentModules extends AgentModulesInput = ModulesMap> extends 
 
       const outOfBandInvitation = this.oob.parseInvitation(this.mediationRecipient.config.mediatorInvitationUrl)
       const mediationConnection = await this.getMediationConnection(outOfBandInvitation)
-      await this.mediationRecipient.provision(mediationConnection, outOfBandInvitation)
+      await this.mediationRecipient.provision(mediationConnection)
     }
 
     await this.mediator.initialize()

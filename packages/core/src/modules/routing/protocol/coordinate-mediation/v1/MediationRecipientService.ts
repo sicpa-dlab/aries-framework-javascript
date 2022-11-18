@@ -18,6 +18,7 @@ import { MessageSender } from '../../../../../agent/MessageSender'
 import { createOutboundDIDCommV1Message } from '../../../../../agent/helpers'
 import { Key, KeyType } from '../../../../../crypto'
 import { injectable } from '../../../../../plugins'
+import { TrustPingMessage } from '../../../../connections/messages'
 import { ConnectionType } from '../../../../connections/models/ConnectionType'
 import { ConnectionMetadataKeys } from '../../../../connections/repository/ConnectionMetadataTypes'
 import { ConnectionService } from '../../../../connections/services/ConnectionService'
@@ -284,25 +285,27 @@ export class MediationRecipientService extends MediationRecipientSharedService {
           responseRequested: false,
         }
       )
-      const websocketSchemes = ['ws', 'wss']
 
-      await this.messageSender.sendMessage(
-        messageContext.agentContext,
-        createOutboundDIDCommV1Message(connectionRecord, message),
-        {
-          transportPriority: {
-            schemes: websocketSchemes,
-            restrictive: true,
-            // TODO: add keepAlive: true to enforce through the public api
-            // we need to keep the socket alive. It already works this way, but would
-            // be good to make more explicit from the public facing API.
-            // This would also make it easier to change the internal API later on.
-            // keepAlive: true,
-          },
-        }
-      )
+      if (message instanceof TrustPingMessage) {
+        const websocketSchemes = ['ws', 'wss']
+        await this.messageSender.sendMessage(
+          messageContext.agentContext,
+          createOutboundDIDCommV1Message(connectionRecord, message),
+          {
+            transportPriority: {
+              schemes: websocketSchemes,
+              restrictive: true,
+              // TODO: add keepAlive: true to enforce through the public api
+              // we need to keep the socket alive. It already works this way, but would
+              // be good to make more explicit from the public facing API.
+              // This would also make it easier to change the internal API later on.
+              // keepAlive: true,
+            },
+          }
+        )
 
-      return null
+        return null
+      }
     }
     const { maximumMessagePickup } = this.recipientModuleConfig
     const limit = messageCount < maximumMessagePickup ? messageCount : maximumMessagePickup

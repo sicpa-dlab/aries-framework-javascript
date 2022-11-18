@@ -33,6 +33,7 @@ import {
   TrustPingResponseV2MessageHandler,
   TrustPingV2MessageHandler,
 } from './handlers'
+import { TrustPingMessage } from './messages/TrustPingMessage'
 import { DidExchangeRole, DidExchangeState, HandshakeProtocol } from './models'
 import { ConnectionService } from './services/ConnectionService'
 import { TrustPingService } from './services/TrustPingService'
@@ -206,7 +207,10 @@ export class ConnectionsApi {
       // Disable return routing as we don't want to receive a response for this message over the same channel
       // This has led to long timeouts as not all clients actually close an http socket if there is no response message
       message.setReturnRouting(ReturnRouteTypes.none)
-      outboundMessage = createOutboundDIDCommV1Message(connectionRecord, message)
+      outboundMessage =
+        message instanceof TrustPingMessage
+          ? createOutboundDIDCommV1Message(connectionRecord, message)
+          : createOutboundDIDCommV2Message(message, connectionRecord)
     }
 
     await this.messageSender.sendMessage(this.agentContext, outboundMessage)
@@ -286,7 +290,7 @@ export class ConnectionsApi {
       }
 
       const connectionRecord = await this.connectionService.createConnection(this.agentContext, {
-        protocol: HandshakeProtocol.DidExchange,
+        protocol: HandshakeProtocol.V2DidExchange,
         role: DidExchangeRole.Requester,
         state: DidExchangeState.Completed,
         theirLabel: invitation.body.goal,

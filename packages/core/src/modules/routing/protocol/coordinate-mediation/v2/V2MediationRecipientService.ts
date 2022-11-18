@@ -2,8 +2,8 @@ import type { AgentContext } from '../../../../../agent'
 import type { DIDCommV2Message } from '../../../../../agent/didcomm'
 import type { InboundMessageContext } from '../../../../../agent/models/InboundMessageContext'
 import type { ConnectionRecord } from '../../../../connections'
-import type { MediationStateChangedEvent, DidlistUpdatedEvent } from '../../../RoutingEvents'
-import type { MediationGrantMessage, KeyListUpdateResponseMessage, MediationDenyMessage } from './messages'
+import type { DidlistUpdatedEvent, MediationStateChangedEvent } from '../../../RoutingEvents'
+import type { KeyListUpdateResponseMessage, MediationDenyMessage, MediationGrantMessage } from './messages'
 
 import { firstValueFrom, ReplaySubject } from 'rxjs'
 import { filter, first, timeout } from 'rxjs/operators'
@@ -15,6 +15,7 @@ import { createOutboundDIDCommV2Message } from '../../../../../agent/helpers'
 import { injectable } from '../../../../../plugins'
 import { ConnectionService } from '../../../../connections/services/ConnectionService'
 import { DidResolverService } from '../../../../dids/services/DidResolverService'
+import { MediatorPickupStrategy } from '../../../MediatorPickupStrategy'
 import { RecipientModuleConfig } from '../../../RecipientModuleConfig'
 import { RoutingEventTypes } from '../../../RoutingEvents'
 import { MediationRole, MediationState } from '../../../models'
@@ -71,7 +72,10 @@ export class V2MediationRecipientService extends MediationRecipientSharedService
       from: connection.did,
       to: connection.theirDid,
       body: {
-        deliveryType: this.recipientModuleConfig.mediatorPickupStrategy,
+        deliveryType:
+          this.recipientModuleConfig.mediatorPickupStrategy === MediatorPickupStrategy.Implicit
+            ? 'WebSocket'
+            : undefined,
         deliveryData:
           this.recipientModuleConfig.mediatorPushToken ||
           this.recipientModuleConfig.mediatorWebHookEndpoint ||

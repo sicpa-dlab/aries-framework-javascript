@@ -113,7 +113,7 @@ export class V2MediatorService extends MediatorSharedService {
     if (!messageContext.message.from || !messageContext.message.to?.length) return
 
     const connectionRecord = await this.connectionService.createConnection(messageContext.agentContext, {
-      protocol: HandshakeProtocol.DidExchange,
+      protocol: HandshakeProtocol.V2DidExchange,
       role: DidExchangeRole.Requester,
       state: DidExchangeState.Completed,
       theirDid: messageContext.message.from,

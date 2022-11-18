@@ -35,7 +35,7 @@ import { OutOfBandRole } from '../../oob/domain/OutOfBandRole'
 import { OutOfBandState } from '../../oob/domain/OutOfBandState'
 import { ConnectionEventTypes } from '../ConnectionEvents'
 import { ConnectionProblemReportError, ConnectionProblemReportReason } from '../errors'
-import { ConnectionRequestMessage, ConnectionResponseMessage, TrustPingMessage } from '../messages'
+import { ConnectionRequestMessage, ConnectionResponseMessage, TrustPingMessage, TrustPingMessageV2 } from '../messages'
 import {
   authenticationTypes,
   Connection,
@@ -339,13 +339,24 @@ export class ConnectionService {
     agentContext: AgentContext,
     connectionRecord: ConnectionRecord,
     config: { responseRequested?: boolean; comment?: string } = {}
-  ): Promise<ConnectionProtocolMsgReturnType<TrustPingMessage>> {
+  ): Promise<{
+    message: TrustPingMessage | TrustPingMessageV2
+    connectionRecord: ConnectionRecord
+  }> {
     connectionRecord.assertState([DidExchangeState.ResponseReceived, DidExchangeState.Completed])
 
     // TODO:
     //  - create ack message
     //  - maybe this shouldn't be in the connection service?
-    const trustPing = new TrustPingMessage(config)
+    const trustPing = connectionRecord.isDIDCommV1Connection
+      ? new TrustPingMessage(config)
+      : new TrustPingMessageV2({
+          from: connectionRecord.did,
+          to: connectionRecord.theirDid,
+          body: {
+            responseRequested: true,
+          },
+        })
 
     // Only update connection record and emit an event if the state is not already 'Complete'
     if (connectionRecord.state !== DidExchangeState.Completed) {

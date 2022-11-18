@@ -99,6 +99,7 @@ export interface OutboundDIDCommV1ServiceMessage<T extends DIDCommV1Message = DI
 
 export interface OutboundDIDCommV2Message<T extends DIDCommV2Message = DIDCommV2Message> {
   payload: T
+  connection?: ConnectionRecord
 }
 
 export type OutboundPackagePayload = EncryptedMessage | SignedMessage | PlaintextMessage

@@ -463,7 +463,7 @@ export class MessageSender {
       transportPriority?: TransportPriorityOptions
     }
   ) {
-    const { payload: message } = outboundMessage
+    const { payload: message, connection } = outboundMessage
     const sendingMessageType = options?.sendingMessageType || MessageType.Encrypted
 
     // recipient is not specified -> send to defaultTransport
@@ -488,17 +488,17 @@ export class MessageSender {
 
     if (sendingMessageType === MessageType.Plain) {
       // send message plaintext
-      return await this.sendDIDCommV2PlaintextMessage(agentContext, message, senderToRecipientService)
+      return await this.sendDIDCommV2PlaintextMessage(agentContext, message, senderToRecipientService, connection)
     }
 
     if (sendingMessageType === MessageType.Signed) {
       // send message signed
-      return await this.sendDIDCommV2SignedMessage(agentContext, message, senderToRecipientService)
+      return await this.sendDIDCommV2SignedMessage(agentContext, message, senderToRecipientService, connection)
     }
 
     if (sendingMessageType === MessageType.Encrypted) {
       // send message encrypted
-      return await this.sendDIDCommV2EncryptedMessage(agentContext, message, senderToRecipientService)
+      return await this.sendDIDCommV2EncryptedMessage(agentContext, message, senderToRecipientService, connection)
     }
   }
 
@@ -545,17 +545,19 @@ export class MessageSender {
   private async sendDIDCommV2PlaintextMessage(
     agentContext: AgentContext,
     message: DIDCommV2Message,
-    services: DidDocumentService[]
+    services: DidDocumentService[],
+    connection?: ConnectionRecord
   ) {
     this.logger.debug(`Sending plaintext message ${message.id}`)
     const recipientDid = message.recipient()
-    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid)
+    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, connection)
   }
 
   private async sendDIDCommV2SignedMessage(
     agentContext: AgentContext,
     message: DIDCommV2Message,
-    services: DidDocumentService[]
+    services: DidDocumentService[],
+    connection?: ConnectionRecord
   ) {
     this.logger.debug(`Sending JWS message ${message.id}`)
 
@@ -569,13 +571,14 @@ export class MessageSender {
       return this.envelopeService.packMessage(agentContext, message, params)
     }
 
-    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, pack)
+    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, connection, pack)
   }
 
   private async sendDIDCommV2EncryptedMessage(
     agentContext: AgentContext,
     message: DIDCommV2Message,
-    services: DidDocumentService[]
+    services: DidDocumentService[],
+    connection?: ConnectionRecord
   ) {
     const recipientDid = message.recipient()
     if (!recipientDid) {
@@ -587,7 +590,7 @@ export class MessageSender {
       return await this.encryptDIDCommV2Message(agentContext, message, service)
     }
 
-    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, pack)
+    return this.sendOutboundDIDCommV2Message(agentContext, message, services, recipientDid, connection, pack)
   }
 
   private async encryptDIDCommV2Message(
@@ -617,6 +620,7 @@ export class MessageSender {
     message: DIDCommV2Message,
     services: DidDocumentService[],
     recipientDid?: string,
+    connection?: ConnectionRecord,
     packMessage?: (message: DIDCommV2Message, service: DidDocumentService) => Promise<OutboundPackagePayload>
   ) {
     for (const service of services) {
@@ -624,7 +628,12 @@ export class MessageSender {
         this.logger.info(`Sending message to ${service.serviceEndpoint}. Transport ${service.protocolScheme}`)
 
         const payload = packMessage ? await packMessage(message, service) : { ...message }
-        const outboundPackage = { payload, recipientDid, endpoint: service.serviceEndpoint }
+        const outboundPackage = {
+          payload,
+          recipientDid,
+          endpoint: service.serviceEndpoint,
+          connectionId: connection?.id,
+        }
 
         this.logger.trace(`Sending outbound message to transport:`, {
           transport: service.protocolScheme,

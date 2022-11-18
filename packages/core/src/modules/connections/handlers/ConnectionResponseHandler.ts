@@ -7,7 +7,7 @@ import type { ConnectionService } from '../services/ConnectionService'
 import { createOutboundDIDCommV1Message } from '../../../agent/helpers'
 import { ReturnRouteTypes } from '../../../decorators/transport/TransportDecorator'
 import { AriesFrameworkError } from '../../../error'
-import { ConnectionResponseMessage } from '../messages'
+import { ConnectionResponseMessage, TrustPingMessage } from '../messages'
 
 export class ConnectionResponseHandler implements Handler {
   private connectionService: ConnectionService
@@ -79,11 +79,12 @@ export class ConnectionResponseHandler implements Handler {
       const { message } = await this.connectionService.createTrustPing(messageContext.agentContext, connection, {
         responseRequested: false,
       })
-
-      // Disable return routing as we don't want to receive a response for this message over the same channel
-      // This has led to long timeouts as not all clients actually close an http socket if there is no response message
-      message.setReturnRouting(ReturnRouteTypes.none)
-      return createOutboundDIDCommV1Message(connection, message)
+      if (message instanceof TrustPingMessage) {
+        // Disable return routing as we don't want to receive a response for this message over the same channel
+        // This has led to long timeouts as not all clients actually close an http socket if there is no response message
+        message.setReturnRouting(ReturnRouteTypes.none)
+        return createOutboundDIDCommV1Message(connection, message)
+      }
     }
   }
 }

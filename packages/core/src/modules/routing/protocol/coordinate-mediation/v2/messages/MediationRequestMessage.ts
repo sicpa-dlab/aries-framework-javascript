@@ -1,6 +1,6 @@
 import type { DIDCommV2MessageParams } from '../../../../../../agent/didcomm'
 
-import { Type } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
 import { IsOptional, IsString, ValidateNested } from 'class-validator'
 
 import { DIDCommV2Message } from '../../../../../../agent/didcomm'
@@ -9,10 +9,12 @@ import { IsValidMessageType, parseMessageType } from '../../../../../../utils/me
 export class MediationRequestMessageBody {
   @IsString()
   @IsOptional()
+  @Expose({ name: 'delivery_type' })
   public deliveryType?: string
 
   @IsString()
   @IsOptional()
+  @Expose({ name: 'delivery_data' })
   public deliveryData?: string
 }
 

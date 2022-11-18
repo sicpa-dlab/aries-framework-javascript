@@ -28,10 +28,12 @@ export function createOutboundServiceMessage<T extends DIDCommV1Message = DIDCom
 }
 
 export function createOutboundDIDCommV2Message<T extends DIDCommV2Message = DIDCommV2Message>(
-  payload: T
+  payload: T,
+  connection?: ConnectionRecord
 ): OutboundDIDCommV2Message<T> {
   return {
     payload,
+    connection,
   }
 }
 

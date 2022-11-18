@@ -2,7 +2,6 @@ import type { V2MediationRequestMessage } from '../../../build'
 import type { OutboundWebSocketClosedEvent, OutboundWebSocketOpenedEvent } from '../../transport'
 import type { OutboundDIDCommV1Message, OutboundDIDCommV2Message } from '../../types'
 import type { ConnectionRecord } from '../connections'
-import type { OutOfBandInvitation, V2OutOfBandInvitation } from '../oob/messages'
 import type { MediationStateChangedEvent } from './RoutingEvents'
 import type { MediationRequestMessage } from './protocol'
 import type { MediationRecord } from './repository'
@@ -16,13 +15,13 @@ import { Dispatcher } from '../../agent/Dispatcher'
 import { EventEmitter } from '../../agent/EventEmitter'
 import { filterContextCorrelationId } from '../../agent/Events'
 import { MessageSender } from '../../agent/MessageSender'
-import { DIDCommMessageVersion } from '../../agent/didcomm'
 import { createOutboundDIDCommV1Message, createOutboundDIDCommV2Message } from '../../agent/helpers'
 import { InjectionSymbols } from '../../constants'
 import { AriesFrameworkError } from '../../error'
 import { Logger } from '../../logger'
 import { inject, injectable } from '../../plugins'
 import { TransportEventTypes } from '../../transport'
+import { TrustPingMessage } from '../connections/messages'
 import { ConnectionService } from '../connections/services'
 import { DidsApi } from '../dids'
 import { DidService } from '../dids/services'
@@ -108,7 +107,7 @@ export class RecipientApi {
     // Poll for messages from mediator
     const defaultMediator = await this.findDefaultMediator()
     if (defaultMediator) {
-      this.initiateMessagePickup(defaultMediator, this.config.mediatorPickupStrategy).catch((error) => {
+      this.initiateMessagePickup(defaultMediator).catch((error) => {
         this.logger.warn(`Error initiating message pickup with mediator ${defaultMediator.id}`, { error })
       })
     }
@@ -142,14 +141,20 @@ export class RecipientApi {
 
     const websocketSchemes = ['ws', 'wss']
     const didDocument = connectionRecord.theirDid && (await this.dids.resolveDidDocument(connectionRecord.theirDid))
-    const services = didDocument && didDocument?.didCommServices
+    const services = didDocument && didDocument?.service
+
     const hasWebSocketTransport = services && services.some((s) => websocketSchemes.includes(s.protocolScheme))
 
     if (!hasWebSocketTransport) {
       throw new AriesFrameworkError('Cannot open websocket to connection without websocket service endpoint')
     }
 
-    await this.messageSender.sendMessage(this.agentContext, createOutboundDIDCommV1Message(connectionRecord, message), {
+    const outboundMessage =
+      message instanceof TrustPingMessage
+        ? createOutboundDIDCommV1Message(connectionRecord, message)
+        : createOutboundDIDCommV2Message(message, connectionRecord)
+
+    await this.messageSender.sendMessage(this.agentContext, outboundMessage, {
       transportPriority: {
         schemes: websocketSchemes,
         restrictive: true,
@@ -350,6 +355,10 @@ export class RecipientApi {
   private async getPickupStrategyForMediator(mediator: MediationRecord) {
     let mediatorPickupStrategy = mediator.pickupStrategy ?? this.config.mediatorPickupStrategy
 
+    const mediatorConnection = await this.connectionService.getById(this.agentContext, mediator.connectionId)
+
+    if (mediatorConnection.isDIDCommV2Connection) return MediatorPickupStrategy.PickUpV3
+
     // If mediator pickup strategy is not configured we try to query if batch pickup
     // is supported through the discover features protocol
     if (!mediatorPickupStrategy) {
@@ -455,12 +464,8 @@ export class RecipientApi {
     return null
   }
 
-  public async requestAndAwaitGrant(
-    connection: ConnectionRecord,
-    version: DIDCommMessageVersion = DIDCommMessageVersion.V1,
-    timeoutMs = 10000
-  ): Promise<MediationRecord> {
-    const { mediationRecord, outboundMessage } = await this.createRequest(connection, version)
+  public async requestAndAwaitGrant(connection: ConnectionRecord, timeoutMs = 10000): Promise<MediationRecord> {
+    const { mediationRecord, outboundMessage } = await this.createRequest(connection)
 
     // Create observable for event
     const observable = this.eventEmitter.observable<MediationStateChangedEvent>(RoutingEventTypes.MediationStateChanged)
@@ -483,21 +488,18 @@ export class RecipientApi {
       .subscribe(subject)
 
     // Send mediation request message
-    await this.sendMessage(outboundMessage)
+    await this.sendMessage(outboundMessage, MediatorPickupStrategy.PickUpV3)
 
     const event = await firstValueFrom(subject)
     return event.payload.mediationRecord
   }
 
-  public async createRequest(
-    connection: ConnectionRecord,
-    version: DIDCommMessageVersion
-  ): Promise<{
+  public async createRequest(connection: ConnectionRecord): Promise<{
     mediationRecord: MediationRecord
     message: MediationRequestMessage | V2MediationRequestMessage
     outboundMessage: OutboundDIDCommV1Message | OutboundDIDCommV2Message
   }> {
-    if (version === DIDCommMessageVersion.V1) {
+    if (connection.isDIDCommV1Connection) {
       const { mediationRecord, message } = await this.mediationRecipientService.createRequest(
         this.agentContext,
         connection
@@ -518,16 +520,15 @@ export class RecipientApi {
    * Requests mediation for a given connection and sets that as default mediator.
    *
    * @param connection connection record which will be used for mediation
-   * @param invitation Mediator out-of-band invitation
    * @returns mediation record
    */
-  public async provision(connection: ConnectionRecord, invitation: OutOfBandInvitation | V2OutOfBandInvitation) {
+  public async provision(connection: ConnectionRecord) {
     this.logger.debug('Connection completed, requesting mediation')
 
     let mediation = await this.findByConnectionId(connection.id)
     if (!mediation) {
       this.logger.info(`Requesting mediation for connection ${connection.id}`)
-      mediation = await this.requestAndAwaitGrant(connection, invitation.version, 60000) // TODO: put timeout as a config parameter
+      mediation = await this.requestAndAwaitGrant(connection, 60000) // TODO: put timeout as a config parameter
       this.logger.debug('Mediation granted, setting as default mediator')
       await this.setDefaultMediator(mediation)
       this.logger.debug('Default mediator set')
