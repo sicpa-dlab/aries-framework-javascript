@@ -54,6 +54,6 @@ export class Key {
   }
 
   public buildKeyId(did: string): string {
-    return `${did}#${this.fingerprint}`
+    return `${did}#${TypedArrayEncoder.toBase58(this.prefixedPublicKey)}`
   }
 }
