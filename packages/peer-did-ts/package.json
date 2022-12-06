@@ -2,7 +2,7 @@
   "name": "@sicpa_open_source/peer-did-ts",
   "main": "build/index",
   "types": "build/index",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "files": [
     "build"
   ],
