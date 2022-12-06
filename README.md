@@ -107,6 +107,9 @@ Some features are not yet supported, but are on our roadmap. Check [the roadmap]
 
 Documentation on how to get started with Aries Framework JavaScript can be found at https://aries.js.org
 
+## Publish new packages (SICPA's fork)
+See docs [here](sicpa-docs/PUBLISH.md)
+
 ### Demo
 
 To get to know the AFJ flow, we built a demo to walk through it yourself together with agents Getter and Faber.
