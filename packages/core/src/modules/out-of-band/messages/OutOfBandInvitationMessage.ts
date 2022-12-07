@@ -1,5 +1,5 @@
 import type { DIDCommV2MessageParams } from '../../../agent/didcomm'
-import type { Attachment } from 'didcomm'
+import type { V2Attachment } from '../../../decorators/attachment/V2Attachment'
 
 import { Expose, Type } from 'class-transformer'
 import { IsInstance, IsOptional, IsString, ValidateNested } from 'class-validator'
@@ -67,11 +67,11 @@ export class OutOfBandInvitationMessage extends DIDCommV2Message {
     return JsonTransformer.fromJSON(json, OutOfBandInvitationMessage)
   }
 
-  public static createAndroidNearbyHandshakeJSONAttachment(attachment: AndroidNearbyHandshakeAttachment): Attachment {
+  public static createAndroidNearbyHandshakeJSONAttachment(attachment: AndroidNearbyHandshakeAttachment): V2Attachment {
     return this.createJSONAttachment(ANDROID_NEARBY_HANDSHAKE_ATTACHMENT_ID, JsonTransformer.toJSON(attachment))
   }
 
-  public static createOutOfBandJSONAttachment(attachment: Record<string, unknown>): Attachment {
+  public static createOutOfBandJSONAttachment(attachment: Record<string, unknown>): V2Attachment {
     return this.createJSONAttachment(ATTACHMENT_ID, JsonTransformer.toJSON(attachment))
   }
 

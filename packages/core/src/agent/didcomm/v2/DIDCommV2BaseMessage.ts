@@ -1,9 +1,9 @@
 import type { ParsedMessageType } from '../../../utils/messageType'
-import type { Attachment } from 'didcomm'
 
-import { Expose } from 'class-transformer'
-import { IsArray, IsNumber, IsOptional, IsString, Matches } from 'class-validator'
+import { Expose, Type } from 'class-transformer'
+import { IsArray, IsNumber, IsOptional, IsString, Matches, ValidateNested } from 'class-validator'
 
+import { V2Attachment } from '../../../decorators/attachment/V2Attachment'
 import { JsonEncoder } from '../../../utils'
 import { uuid } from '../../../utils/uuid'
 import { MessageIdRegExp, MessageTypeRegExp } from '../validation'
@@ -20,7 +20,7 @@ export type DIDCommV2MessageParams = {
   created_time?: number
   expires_time?: number
   from_prior?: string
-  attachments?: Array<Attachment>
+  attachments?: Array<V2Attachment>
   body?: unknown
 }
 
@@ -71,7 +71,12 @@ export class DIDCommV2BaseMessage {
   public body!: unknown
 
   @IsOptional()
-  public attachments?: Array<Attachment>
+  @Type(() => V2Attachment)
+  @IsArray()
+  @ValidateNested({
+    each: true,
+  })
+  public attachments?: Array<V2Attachment>
 
   public constructor(options?: DIDCommV2MessageParams) {
     if (options) {
@@ -93,7 +98,7 @@ export class DIDCommV2BaseMessage {
     return uuid()
   }
 
-  public static createJSONAttachment<T>(id: string, message: T): Attachment {
+  public static createJSONAttachment<T>(id: string, message: T): V2Attachment {
     return {
       id: id,
       // media_type: ATTACHMENT_MEDIA_TYPE,
@@ -104,7 +109,7 @@ export class DIDCommV2BaseMessage {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public static createBase64Attachment<T>(id: string, message: T): Attachment {
+  public static createBase64Attachment<T>(id: string, message: T): V2Attachment {
     return {
       id: id,
       // media_type: ATTACHMENT_MEDIA_TYPE,
@@ -114,7 +119,7 @@ export class DIDCommV2BaseMessage {
     }
   }
 
-  public static unpackAttachmentAsJson(attachment: Attachment) {
+  public static unpackAttachmentAsJson(attachment: V2Attachment) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = attachment.data as any //FIXME: didcomm package doesn't provide convenient way to process attachment
     if (typeof data.base64 === 'string') {
