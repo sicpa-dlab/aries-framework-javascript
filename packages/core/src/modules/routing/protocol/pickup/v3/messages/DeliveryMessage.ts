@@ -1,15 +1,15 @@
 import type { DIDCommV2MessageParams } from '../../../../../../agent/didcomm'
-import type { Attachment } from 'didcomm'
 
 import { Type, Expose } from 'class-transformer'
-import { ValidateNested, IsObject, IsOptional, IsString } from 'class-validator'
+import { ValidateNested, IsObject, IsOptional, IsString, IsArray } from 'class-validator'
 
 import { DIDCommV2Message } from '../../../../../../agent/didcomm'
+import { V2Attachment } from '../../../../../../decorators/attachment/V2Attachment'
 import { IsValidMessageType, parseMessageType } from '../../../../../../utils/messageType'
 
 export type DeliveryMessageParams = {
   body: DeliveryBody
-  attachments: Attachment[]
+  attachments: V2Attachment[]
 } & DIDCommV2MessageParams
 
 class DeliveryBody {
@@ -29,7 +29,12 @@ export class DeliveryMessage extends DIDCommV2Message {
   public readonly type = DeliveryMessage.type.messageTypeUri
   public static readonly type = parseMessageType('https://didcomm.org/messagepickup/3.0/delivery')
 
-  public attachments!: Array<Attachment>
+  @Type(() => V2Attachment)
+  @IsArray()
+  @ValidateNested({
+    each: true,
+  })
+  public attachments!: Array<V2Attachment>
 
   public constructor(params?: DeliveryMessageParams) {
     super(params)
