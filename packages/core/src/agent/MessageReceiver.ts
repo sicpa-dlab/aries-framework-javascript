@@ -84,13 +84,6 @@ export class MessageReceiver {
   ) {
     this.logger.debug(`Agent ${this.config.label} received message`)
 
-    // Workaround for delivery message parsing issue on iOS
-    // See https://github.com/sicpa-dlab/cbdc-projects/issues/1727
-    if (typeof inboundMessage !== 'object') {
-      inboundMessage = JSON.parse(inboundMessage as string)
-      this.logger.warn(`Caught non-object message ${JSON.stringify(inboundMessage)}`)
-    }
-
     try {
       if (this.isEncryptedMessage(inboundMessage)) {
         return await this.receivePackedMessage(
