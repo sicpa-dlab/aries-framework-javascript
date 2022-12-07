@@ -68,7 +68,7 @@ export class GossipService implements GossipInterface {
     this.gossipingStarted = true
   }
 
-  public stop(): void {
+  public stop(): Promise<void> {
     return this.gossip.stop()
   }
 
