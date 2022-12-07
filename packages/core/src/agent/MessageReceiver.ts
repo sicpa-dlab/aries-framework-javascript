@@ -83,7 +83,6 @@ export class MessageReceiver {
     { session }: { session?: TransportSession; connection?: ConnectionRecord }
   ) {
     this.logger.debug(`Agent ${this.config.label} received message`)
-
     try {
       if (this.isEncryptedMessage(inboundMessage)) {
         return await this.receivePackedMessage(
