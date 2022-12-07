@@ -41,7 +41,7 @@
     web-did-resolver "^2.0.8"
 
 "@aries-framework/core@file:packages/core":
-  version "0.4.5"
+  version "0.4.7"
   dependencies:
     "@multiformats/base-x" "^4.0.1"
     "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
@@ -77,10 +77,10 @@
     varint "^6.0.0"
     web-did-resolver "2.0.8"
 
-"@aries-framework/core@npm:@sicpa-dlab/aries-framework-core@0.4.5":
-  version "0.4.5"
-  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/aries-framework-core/0.4.5/973384da1d5d57a374ee915ba515ba1f83f34234#973384da1d5d57a374ee915ba515ba1f83f34234"
-  integrity sha512-vgGG2BglXJybicDZPvCy7RIsn35JqZLAUdruBSTAl1mviLYcKw6YASIX0ys8ExCPCKvbJiWFTLfccZPKJLs1dA==
+"@aries-framework/core@npm:@sicpa-dlab/aries-framework-core@0.4.7":
+  version "0.4.7"
+  resolved "https://npm.pkg.github.com/download/@sicpa-dlab/aries-framework-core/0.4.7/2b61d8db0634e2ae94ccebfeaadec564c846c142#2b61d8db0634e2ae94ccebfeaadec564c846c142"
+  integrity sha512-zg/OTBw0C9AYD74QHHZd6+3UKCMuGpVR7vTSDZpkv8DX0ugqHG282pfjP3bAfAkMoM74lnD4Sv4rRtYvoxZcVQ==
   dependencies:
     "@multiformats/base-x" "^4.0.1"
     "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
@@ -130,9 +130,9 @@
     ws "^7.5.3"
 
 "@aries-framework/node@file:packages/node":
-  version "0.4.5"
+  version "0.4.7"
   dependencies:
-    "@aries-framework/core" "npm:@sicpa-dlab/aries-framework-core@0.4.5"
+    "@aries-framework/core" "npm:@sicpa-dlab/aries-framework-core@0.4.7"
     "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
     "@sicpa-dlab/witness-gossip-protocol-ts" "0.3.13"
     "@sicpa-dlab/witness-gossip-types-ts" "0.3.9"
@@ -9104,9 +9104,9 @@ raw-body@2.5.1:
     unpipe "1.0.0"
 
 react-devtools-core@^4.6.0:
-  version "4.27.0"
-  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.27.0.tgz#b57eb69df273c88daa3dc1577177ea9bbdd0a67d"
-  integrity sha512-9dfVBf/9yquz5deUUCi9kA/JA4+2MTUxfKRv6IqizR0B26/28CxJedXb0kXtPD/cRKce8ecU1KhfJiDzUkOOaQ==
+  version "4.27.1"
+  resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.27.1.tgz#167aa174383c65786cbb7e965a5b39c702f0a2d3"
+  integrity sha512-qXhcxxDWiFmFAOq48jts9YQYe1+wVoUXzJTlY4jbaATzyio6dd6CUGu3dXBhREeVgpZ+y4kg6vFJzIOZh6vY2w==
   dependencies:
     shell-quote "^1.6.1"
     ws "^7"
