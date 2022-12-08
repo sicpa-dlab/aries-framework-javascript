@@ -13,8 +13,8 @@
   },
   "scripts": {
     "check-types": "yarn check-types:build && yarn check-types:tests",
-    "check-types:tests": "tsc -p tsconfig.test.json --noEmit",
-    "check-types:build": "lerna exec tsc -- --noEmit",
+    "check-types:tests": "tsc -p tsconfig.test.json --noEmit --skipLibCheck",
+    "check-types:build": "lerna exec tsc -- --noEmit --skipLibCheck",
     "prettier": "prettier --ignore-path .gitignore '**/*.+(js|json|ts|md|yml|yaml)'",
     "format": "yarn prettier --write",
     "check-format": "yarn prettier --list-different",

@@ -4,6 +4,9 @@ import type { Logger as ValueTransferLogger, LogLevel } from '@sicpa-dlab/value-
 
 import { injectable, AgentConfig } from '@aries-framework/core'
 
+/*
+ *  Implementation of Logger interface required by Gossip library
+ * */
 @injectable()
 export class GossipLoggerService implements ValueTransferLogger {
   public logLevel: LogLevel

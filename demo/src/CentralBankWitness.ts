@@ -1,5 +1,6 @@
 /*eslint import/no-cycle: [2, { maxDepth: 1 }]*/
 import { DidMarker, Transports } from '@aries-framework/core'
+import { initWitnessGossip } from '@aries-framework/gossip'
 
 import { BaseAgent } from './BaseAgent'
 import { Output } from './OutputClass'
@@ -37,6 +38,7 @@ export class CentralBankWitness extends BaseAgent {
   public static async build(): Promise<CentralBankWitness> {
     const witness = new CentralBankWitness('centralBank', 8081)
     await witness.initializeAgent()
+    await initWitnessGossip(witness.agent)
     const publicDid = await witness.agent.getStaticDid(DidMarker.Public)
     console.log(`CentralBank Public DID: ${publicDid?.did}`)
     return witness
