@@ -120,12 +120,14 @@
   version "0.0.1"
   dependencies:
     "@aries-framework/core" "npm:@sicpa-dlab/aries-framework-core@0.5.0"
+    "@aries-framework/value-transfer-events" "file:../Library/Caches/Yarn/v6/npm-@aries-framework-gossip-0.0.1-834cf2dc-1c83-4e1e-b8e9-baebdd8dd0a1-1670509012169/node_modules/@aries-framework/value-transfer-events"
     "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
     "@sicpa-dlab/witness-gossip-protocol-ts" "0.3.13"
     "@sicpa-dlab/witness-gossip-types-ts" "0.3.9"
     buffer "^6.0.3"
     class-transformer "0.5.1"
     class-validator "0.13.1"
+    uuid "^8.3.2"
 
 "@aries-framework/node@*":
   version "0.2.5"
@@ -157,6 +159,35 @@
     node-fetch "^2.6.1"
     ref-napi "^3.0.3"
     ws "^7.5.3"
+
+"@aries-framework/value-transfer-events@file:packages/value-transfer-events":
+  version "0.0.1"
+  dependencies:
+    "@aries-framework/core" "npm:@sicpa-dlab/aries-framework-core@0.5.0"
+    "@aries-framework/gossip" "file:../Library/Caches/Yarn/v6/npm-@aries-framework-value-transfer-events-0.0.1-b7b391a5-9feb-4231-8c0e-af5f938aa5d4-1670509012164/node_modules/@aries-framework/gossip"
+    "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
+    "@sicpa-dlab/value-transfer-protocol-ts" "0.4.5"
+    "@sicpa-dlab/witness-gossip-types-ts" "0.3.9"
+    buffer "^6.0.3"
+    class-transformer "0.5.1"
+    class-validator "0.13.1"
+    rxjs "^7.2.0"
+    uuid "^8.3.2"
+
+"@aries-framework/value-transfer@file:packages/value-transfer":
+  version "0.0.1"
+  dependencies:
+    "@aries-framework/core" "npm:@sicpa-dlab/aries-framework-core@0.5.0"
+    "@aries-framework/gossip" "file:../Library/Caches/Yarn/v6/npm-@aries-framework-value-transfer-0.0.1-baa541fa-bd3e-46f6-ae3c-d0fc2536685e-1670509012190/node_modules/@aries-framework/gossip"
+    "@aries-framework/value-transfer-events" "file:../Library/Caches/Yarn/v6/npm-@aries-framework-value-transfer-0.0.1-baa541fa-bd3e-46f6-ae3c-d0fc2536685e-1670509012190/node_modules/@aries-framework/value-transfer-events"
+    "@sicpa-dlab/value-transfer-common-ts" "0.3.7"
+    "@sicpa-dlab/value-transfer-protocol-ts" "0.4.5"
+    "@sicpa-dlab/witness-gossip-types-ts" "0.3.9"
+    buffer "^6.0.3"
+    class-transformer "0.5.1"
+    class-validator "0.13.1"
+    rxjs "^7.2.0"
+    uuid "^8.3.2"
 
 "@azure/core-asynciterator-polyfill@^1.0.0":
   version "1.0.2"

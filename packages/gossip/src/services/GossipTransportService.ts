@@ -7,8 +7,9 @@ import {
   DIDCommV2Message,
   injectable,
   JsonEncoder,
-  WitnessTableMessage,
 } from '@aries-framework/core'
+
+import { WitnessTableMessage } from '../messages'
 
 /*
  *  Implementation of Transport interface required by Gossip library

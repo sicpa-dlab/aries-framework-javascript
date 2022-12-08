@@ -1,4 +1,4 @@
-import type { ValueTransferRecord } from '@aries-framework/core'
+import type { ValueTransferRecord } from '@aries-framework/value-transfer'
 
 import { clear } from 'console'
 import { textSync } from 'figlet'
@@ -44,7 +44,7 @@ export class AnnaInquirer extends BaseInquirer {
   }
 
   private async getPromptChoice() {
-    const balance = await this.giver.agent.valueTransfer.getBalance()
+    const balance = await this.giver.valueTransfer.getBalance()
     console.log(greenText('Balance: ' + balance))
     return prompt([this.inquireOptions(this.promptOptionsString)])
   }
@@ -82,7 +82,7 @@ export class AnnaInquirer extends BaseInquirer {
   }
 
   public async acceptPaymentRequest(valueTransferRecord: ValueTransferRecord) {
-    const balance = await this.giver.agent.valueTransfer.getBalance()
+    const balance = await this.giver.valueTransfer.getBalance()
     console.log(greenText(`\nCurrent balance: ${balance}`))
     const confirm = await prompt([this.inquireConfirmation(Title.PaymentRequestTitle)])
     if (confirm.options === ConfirmOptions.No) {

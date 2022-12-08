@@ -1,9 +1,13 @@
 import type { DependencyManager } from '@aries-framework/core'
 
-import { Dispatcher, module, injectable, InjectionSymbols, inject } from '@aries-framework/core'
+import { Dispatcher, module, injectable, inject } from '@aries-framework/core'
 
 import { WitnessGossipMessageHandler } from './handlers'
 import { GossipService } from './services'
+
+export const InjectionSymbols = {
+  GossipService: Symbol('GossipService'),
+}
 
 @module()
 @injectable()

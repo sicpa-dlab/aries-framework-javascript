@@ -1,17 +1,24 @@
-import type { ResumeValueTransferTransactionEvent, WitnessTableReceivedEvent } from '@aries-framework/core'
+import type { Logger } from '@aries-framework/core'
+import type {
+  ResumeValueTransferTransactionEvent,
+  WitnessTableReceivedEvent,
+} from '@aries-framework/value-transfer-events'
 import type { GossipInterface, TransactionRecord, BaseGossipMessage } from '@sicpa-dlab/witness-gossip-types-ts'
 
 import {
   AriesFrameworkError,
   DidMarker,
-  ValueTransferEventTypes,
-  AgentConfig,
   EventEmitter,
   DidService,
   injectable,
+  AgentConfig,
 } from '@aries-framework/core'
+import { ValueTransferSharedEventTypes } from '@aries-framework/value-transfer-events'
 import { GossipMessageDispatcher, Gossip } from '@sicpa-dlab/witness-gossip-protocol-ts'
 import { MappingTable, WitnessDetails, WitnessGossipInfo, WitnessTable } from '@sicpa-dlab/witness-gossip-types-ts'
+import { v4 } from 'uuid'
+
+import { WitnessConfig } from '../GossipConfig'
 
 import { GossipCryptoService } from './GossipCryptoService'
 import { GossipLoggerService } from './GossipLoggerService'
@@ -19,13 +26,15 @@ import { GossipTransportService } from './GossipTransportService'
 
 @injectable()
 export class GossipService implements GossipInterface {
+  private readonly logger: Logger
   private readonly gossip: Gossip
   private readonly messageDispatcher: GossipMessageDispatcher
 
   private gossipingStarted = false
 
   public constructor(
-    private readonly config: AgentConfig,
+    private readonly agentConfig: AgentConfig,
+    private readonly config: WitnessConfig,
     private readonly gossipCryptoService: GossipCryptoService,
     private readonly gossipTransportService: GossipTransportService,
     private readonly gossipLoggerService: GossipLoggerService,
@@ -40,11 +49,12 @@ export class GossipService implements GossipInterface {
         metrics: this.config.gossipPlugins?.metrics,
       },
       {
-        label: this.config.label,
+        label: this.config.gossipConfig?.label || v4(),
         ...this.config.gossipConfig,
       }
     )
     this.messageDispatcher = new GossipMessageDispatcher(this.gossip)
+    this.logger = agentConfig.logger
   }
 
   public getWitnessDetails(): Promise<WitnessDetails> {
@@ -72,11 +82,8 @@ export class GossipService implements GossipInterface {
     return this.gossip.stop()
   }
 
-  public async initState(): Promise<void> {
-    this.config.logger.info('> initState')
-
-    const config = this.config.valueTransferWitnessConfig
-    if (!config) throw new Error('Value transfer config is not available')
+  public async initWitnessState(config: WitnessConfig): Promise<void> {
+    this.logger.info('> initState')
 
     const did = await this.didService.findStaticDid(DidMarker.Public)
     if (!did) {
@@ -92,9 +99,9 @@ export class GossipService implements GossipInterface {
     const info = new WitnessDetails({ wid: config.wid, did: did.did })
     const mappingTable = new MappingTable(config.knownWitnesses)
 
-    await this.gossip.initState(info, mappingTable)
+    await this.initState(info, mappingTable)
 
-    this.config.logger.info('< initState completed!')
+    this.logger.info('< initState completed!')
   }
 
   public clearState(): Promise<void> {
@@ -120,7 +127,7 @@ export class GossipService implements GossipInterface {
         const witnessTable = message as WitnessTable
 
         this.eventEmitter.emit<WitnessTableReceivedEvent>({
-          type: ValueTransferEventTypes.WitnessTableReceived,
+          type: ValueTransferSharedEventTypes.WitnessTableReceived,
           payload: {
             witnesses: witnessTable.body.witnesses,
           },
@@ -134,7 +141,7 @@ export class GossipService implements GossipInterface {
 
         // Resume VTP Transaction if exists -> this event will be caught in WitnessService
         this.eventEmitter.emit<ResumeValueTransferTransactionEvent>({
-          type: ValueTransferEventTypes.ResumeTransaction,
+          type: ValueTransferSharedEventTypes.ResumeTransaction,
           payload: {
             thid: witnessGossipInfo.pthid,
           },
@@ -143,5 +150,9 @@ export class GossipService implements GossipInterface {
         break
       }
     }
+  }
+
+  public async initState(myInfo: WitnessDetails, mappingTable: MappingTable): Promise<void> {
+    await this.gossip.initState(myInfo, mappingTable)
   }
 }

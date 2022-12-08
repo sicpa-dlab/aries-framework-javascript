@@ -12,8 +12,6 @@ import { JsonTransformer } from '../../../utils/JsonTransformer'
 import { ShareContactService, ShareContactState } from '../../connections'
 import { DidService } from '../../dids'
 import { DidResolverService } from '../../dids/services/DidResolverService'
-import { ValueTransferGetterService } from '../../value-transfer/services/ValueTransferGetterService'
-import { ValueTransferGiverService } from '../../value-transfer/services/ValueTransferGiverService'
 import { OutOfBandEventTypes } from '../OutOfBandEvents'
 import { AndroidNearbyHandshakeAttachment, OutOfBandGoalCode, OutOfBandInvitationMessage } from '../messages'
 
@@ -25,8 +23,6 @@ export class OutOfBandService {
   private didService: DidService
   private didResolverService: DidResolverService
   private eventEmitter: EventEmitter
-  private valueTransferGetterService: ValueTransferGetterService
-  private valueTransferGiverService: ValueTransferGiverService
   private shareContactService: ShareContactService
   private messageSender: MessageSender
 
@@ -35,8 +31,6 @@ export class OutOfBandService {
     didService: DidService,
     didResolverService: DidResolverService,
     eventEmitter: EventEmitter,
-    valueTransferGetterService: ValueTransferGetterService,
-    valueTransferGiverService: ValueTransferGiverService,
     shareContactService: ShareContactService,
     messageSender: MessageSender
   ) {
@@ -44,8 +38,6 @@ export class OutOfBandService {
     this.didService = didService
     this.didResolverService = didResolverService
     this.eventEmitter = eventEmitter
-    this.valueTransferGetterService = valueTransferGetterService
-    this.valueTransferGiverService = valueTransferGiverService
     this.shareContactService = shareContactService
     this.messageSender = messageSender
   }

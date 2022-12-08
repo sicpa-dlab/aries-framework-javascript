@@ -1,14 +1,17 @@
 /*eslint import/no-cycle: [2, { maxDepth: 1 }]*/
-import type { ValueTransferRecord } from '@aries-framework/core'
+import type { ValueTransferModule, ValueTransferRecord } from '@aries-framework/value-transfer'
 
 import { DidMarker, Transports } from '@aries-framework/core'
+import { initValueTransfer } from '@aries-framework/value-transfer'
 import { TransactionState } from '@sicpa-dlab/value-transfer-protocol-ts'
 
 import { BaseAgent } from './BaseAgent'
 import { greenText, Output, redText } from './OutputClass'
 
 export class Carol extends BaseAgent {
+  public valueTransfer!: ValueTransferModule
   public valueTransferRecordId?: string
+  public static valueTransferConfig = {}
 
   public constructor(name: string, port?: number) {
     super({
@@ -23,21 +26,20 @@ export class Carol extends BaseAgent {
           marker: DidMarker.Public,
         },
       ],
-      valueTransferConfig: {
-        party: {},
-      },
     })
   }
 
   public static async build(): Promise<Carol> {
     const getter = new Carol('carol', undefined)
     await getter.initializeAgent()
+    getter.valueTransfer = await initValueTransfer(getter.agent, this.valueTransferConfig)
+
     const publicDid = await getter.agent.getStaticDid(DidMarker.Public)
     console.log(`Carol Public DID: ${publicDid?.did}`)
 
-    const active = await getter.agent.valueTransfer.getActiveTransaction()
+    const active = await getter.valueTransfer.getActiveTransaction()
     if (active.record?.id) {
-      await getter.agent.valueTransfer.abortTransaction(active.record?.id)
+      await getter.valueTransfer.abortTransaction(active.record?.id)
     }
 
     return getter
@@ -47,11 +49,11 @@ export class Carol extends BaseAgent {
     if (!this.valueTransferRecordId) {
       throw Error(redText(Output.MissingValueTransferRecord))
     }
-    return await this.agent.valueTransfer.getById(this.valueTransferRecordId)
+    return await this.valueTransfer.getById(this.valueTransferRecordId)
   }
 
   public async requestPayment(witness: string) {
-    const { record } = await this.agent.valueTransfer.requestPayment({
+    const { record } = await this.valueTransfer.requestPayment({
       amount: 1,
       witness,
       transport: Transports.Nearby,
@@ -62,7 +64,7 @@ export class Carol extends BaseAgent {
   }
 
   public async acceptPaymentOffer(valueTransferRecord: ValueTransferRecord, witness: string) {
-    const { record } = await this.agent.valueTransfer.acceptPaymentOffer({
+    const { record } = await this.valueTransfer.acceptPaymentOffer({
       recordId: valueTransferRecord.id,
       witness,
     })
@@ -72,7 +74,7 @@ export class Carol extends BaseAgent {
   }
 
   public async abortPaymentOffer(valueTransferRecord: ValueTransferRecord) {
-    const { record } = await this.agent.valueTransfer.abortTransaction(valueTransferRecord.id)
+    const { record } = await this.valueTransfer.abortTransaction(valueTransferRecord.id)
     this.valueTransferRecordId = record?.id
     console.log(redText('\nPayment request rejected!\n'))
     console.log(record?.error)
@@ -83,12 +85,12 @@ export class Carol extends BaseAgent {
 
     console.log('Waiting for Giver to pay...')
     try {
-      const record = await this.agent.valueTransfer.returnWhenIsCompleted(valueTransferRecord.id)
+      const record = await this.valueTransfer.returnWhenIsCompleted(valueTransferRecord.id)
       if (record.state === TransactionState.Completed) {
         console.log(greenText(Output.PaymentDone))
         console.log(greenText('Receipt:'))
         console.log(record.receipt)
-        const balance = await this.agent.valueTransfer.getBalance()
+        const balance = await this.valueTransfer.getBalance()
         console.log(greenText('Balance: ' + balance))
       }
       if (record.state === TransactionState.Failed) {
