@@ -16,10 +16,9 @@ import type {
   CredentialStateChangedEvent,
   ProofRecord,
   ProofStateChangedEvent,
-  ValueTransferStateChangedEvent,
-  ValueTransferRecord,
-  WitnessTableReceivedEvent,
 } from '@aries-framework/core'
+import type { ValueTransferRecord, ValueTransferStateChangedEvent } from '@aries-framework/value-transfer'
+import type { WitnessTableReceivedEvent } from '@aries-framework/value-transfer-events'
 import type BottomBar from 'inquirer/lib/ui/bottom-bar'
 
 import {
@@ -29,9 +28,10 @@ import {
   CredentialState,
   ProofEventTypes,
   ProofState,
-  ValueTransferEventTypes,
   JsonEncoder,
 } from '@aries-framework/core'
+import { ValueTransferEventTypes } from '@aries-framework/value-transfer'
+import { ValueTransferSharedEventTypes } from '@aries-framework/value-transfer-events'
 import { TransactionState } from '@sicpa-dlab/value-transfer-protocol-ts'
 import { ui } from 'inquirer'
 
@@ -123,7 +123,7 @@ export class Listener {
 
   public witnessTableListener(giver: Anna) {
     giver.agent.events.on(
-      ValueTransferEventTypes.WitnessTableReceived,
+      ValueTransferSharedEventTypes.WitnessTableReceived,
       async ({ payload }: WitnessTableReceivedEvent) => {
         console.log('\n\nWitness Table received:')
         console.log(purpleText(JsonEncoder.toString(payload.witnesses)))

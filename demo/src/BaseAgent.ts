@@ -5,7 +5,6 @@ import type {
   InternetChecker,
   Logger,
   OutboundTransport,
-  ValueTransferConfig,
 } from '@aries-framework/core'
 
 import {
@@ -106,7 +105,6 @@ export class BaseAgent {
     staticDids?: DidProps[]
     port?: number
     transports?: Transports[]
-    valueTransferConfig?: ValueTransferConfig
     mediatorConnectionsInvite?: string
     endpoints?: string[]
     emulateOfflineCase?: boolean
@@ -137,7 +135,6 @@ export class BaseAgent {
       autoAcceptProofs: AutoAcceptProof.ContentApproved,
       mediatorPickupStrategy: MediatorPickupStrategy.Explicit,
       mediatorPollingInterval: 5000,
-      valueTransferConfig: props.valueTransferConfig,
       transports: props.transports,
       mediatorConnectionsInvite: props.mediatorConnectionsInvite,
       mediatorDeliveryStrategy: MediatorDeliveryStrategy.WebSocket,

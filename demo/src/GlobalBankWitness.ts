@@ -1,5 +1,7 @@
 /*eslint import/no-cycle: [2, { maxDepth: 1 }]*/
 import { DidMarker, Transports } from '@aries-framework/core'
+import { initWitnessGossip } from '@aries-framework/gossip'
+import { initValueTransfer } from '@aries-framework/value-transfer'
 
 import { BaseAgent } from './BaseAgent'
 import { Output } from './OutputClass'
@@ -7,6 +9,10 @@ import { Output } from './OutputClass'
 export class GlobalBankWitness extends BaseAgent {
   public static wid = '2'
   public static host = 'http://localhost'
+  public static witnessConfig = {
+    wid: GlobalBankWitness.wid,
+    knownWitnesses: BaseAgent.witnessTable,
+  }
 
   public constructor(name: string, port?: number) {
     const endpoint = `${GlobalBankWitness.host}:${port}`
@@ -22,18 +28,14 @@ export class GlobalBankWitness extends BaseAgent {
           endpoint,
         },
       ],
-      valueTransferConfig: {
-        witness: {
-          wid: GlobalBankWitness.wid,
-          knownWitnesses: BaseAgent.witnessTable,
-        },
-      },
     })
   }
 
   public static async build(): Promise<GlobalBankWitness> {
     const witness = new GlobalBankWitness('globalBank', 8082)
     await witness.initializeAgent()
+    await initValueTransfer(witness.agent, {})
+    await initWitnessGossip(witness.agent, this.witnessConfig)
     const publicDid = await witness.agent.getStaticDid(DidMarker.Public)
     console.log(`GlobalBank Public DID: ${publicDid?.did}`)
     return witness

@@ -2,7 +2,6 @@ import type { Logger } from '../logger'
 import type { FileSystem } from '../storage/FileSystem'
 import type { InitConfig, InternetChecker } from '../types'
 import type { AgentDependencies } from './AgentDependencies'
-import type { GossipConfig, GossipPlugins } from '@sicpa-dlab/witness-gossip-types-ts'
 
 import { Subject } from 'rxjs'
 
@@ -12,7 +11,6 @@ import { ConsoleLogger, LogLevel } from '../logger'
 import { AutoAcceptCredential } from '../modules/credentials/models/CredentialAutoAcceptType'
 import { AutoAcceptProof } from '../modules/proofs/ProofAutoAcceptType'
 import { offlineTransports, onlineTransports } from '../modules/routing/types'
-import { AutoAcceptValueTransfer } from '../modules/value-transfer/ValueTransferAutoAcceptType'
 import { DidCommMimeType } from '../types'
 
 import { DefaultInternetChecker } from './defaultInternetChecker'
@@ -78,26 +76,6 @@ export class AgentConfig {
 
   public get autoAcceptCredentials() {
     return this.initConfig.autoAcceptCredentials ?? AutoAcceptCredential.Never
-  }
-
-  public get autoAcceptPaymentOffer() {
-    return this.initConfig.valueTransferConfig?.party?.autoAcceptPaymentOffer ?? AutoAcceptValueTransfer.Never
-  }
-
-  public get autoAcceptPaymentRequest() {
-    return this.initConfig.valueTransferConfig?.party?.autoAcceptPaymentRequest ?? AutoAcceptValueTransfer.Never
-  }
-
-  public get autoAcceptOfferedPaymentRequest() {
-    return this.initConfig.valueTransferConfig?.party?.autoAcceptOfferedPaymentRequest ?? AutoAcceptValueTransfer.Never
-  }
-
-  public get witnessIssuerDids() {
-    return this.initConfig.valueTransferConfig?.witness?.issuerDids
-  }
-
-  public get valueTransferWitnessDid() {
-    return this.initConfig.valueTransferConfig?.party?.witnessDid
   }
 
   public get didCommMimeType() {
@@ -211,14 +189,6 @@ export class AgentConfig {
     return JSON.stringify(config, null, 2)
   }
 
-  public get valueTransferConfig() {
-    return this.initConfig.valueTransferConfig
-  }
-
-  public get valueTransferWitnessConfig() {
-    return this.initConfig.valueTransferConfig?.witness
-  }
-
   public get transports() {
     return this.initConfig.transports || []
   }
@@ -244,13 +214,5 @@ export class AgentConfig {
 
     const pingUrl = this.initConfig.mediatorConnectionsInvite || 'https://www.google.com'
     return new DefaultInternetChecker(pingUrl, this.agentDependencies)
-  }
-
-  public get gossipConfig(): GossipConfig | undefined {
-    return this.valueTransferWitnessConfig?.gossipConfig
-  }
-
-  public get gossipPlugins(): Partial<GossipPlugins> | undefined {
-    return this.valueTransferWitnessConfig?.gossipPlugins
   }
 }

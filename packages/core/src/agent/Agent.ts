@@ -34,7 +34,6 @@ import { ProofsModule } from '../modules/proofs/ProofsModule'
 import { QuestionAnswerModule } from '../modules/question-answer/QuestionAnswerModule'
 import { MediatorModule } from '../modules/routing/MediatorModule'
 import { RecipientModule } from '../modules/routing/RecipientModule'
-import { ValueTransferModule, ValueTransferService } from '../modules/value-transfer'
 import { DependencyManager } from '../plugins'
 import { StorageUpdateService, DidCommMessageRepository, StorageVersionRepository } from '../storage'
 import { InMemoryMessageRepository } from '../storage/InMemoryMessageRepository'
@@ -65,7 +64,6 @@ export class Agent {
   public messageSubscription: Subscription
   private walletService: Wallet
   private didService: DidService
-  private valueTransferService: ValueTransferService
 
   public readonly connections: ConnectionsModule
   public readonly proofs: ProofsModule
@@ -81,7 +79,6 @@ export class Agent {
   public readonly keys: KeysModule
   public readonly dids: DidsModule
   public readonly wallet: WalletModule
-  public readonly valueTransfer: ValueTransferModule
   public readonly outOfBand: OutOfBandModule
   public readonly oob!: OutOfBandModuleV2
 
@@ -120,7 +117,6 @@ export class Agent {
     this.messageSender = this.dependencyManager.resolve(MessageSender)
     this.messageReceiver = this.dependencyManager.resolve(MessageReceiver)
     this.walletService = this.dependencyManager.resolve(InjectionSymbols.Wallet)
-    this.valueTransferService = this.dependencyManager.resolve(ValueTransferService)
     this.didService = this.dependencyManager.resolve(DidService)
 
     // We set the modules in the constructor because that allows to set them as read-only
@@ -140,7 +136,6 @@ export class Agent {
     this.wallet = this.dependencyManager.resolve(WalletModule)
     this.outOfBand = this.dependencyManager.resolve(OutOfBandModule)
     this.oob = this.dependencyManager.resolve(OutOfBandModuleV2)
-    this.valueTransfer = this.dependencyManager.resolve(ValueTransferModule)
 
     // Listen for new messages (either from transports or somewhere else in the framework / extensions)
     this.messageSubscription = this.eventEmitter
@@ -189,9 +184,7 @@ export class Agent {
       staticDids,
       walletConfig,
       mediatorConnectionsInvite,
-      valueTransferConfig,
       publicDidType,
-      lockTransactions,
     } = this.agentConfig
 
     if (this._isInitialized) {
@@ -243,8 +236,6 @@ export class Agent {
         this.logger.warn('Error connecting to ledger, will try to reconnect when needed.', { error })
       })
     }
-
-    if (lockTransactions) await this.valueTransferService.initActiveTransactionLock()
 
     for (const transport of this.inboundTransports) {
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
@@ -301,12 +292,11 @@ export class Agent {
 
     const existingQueriesDid = await this.didService.findStaticDid(DidMarker.Queries)
     if (!existingQueriesDid) {
-      await this.didService.createDID({ isStatic: true, marker: DidMarker.Queries })
-    }
-
-    // VTP state initialization
-    if (valueTransferConfig && !valueTransferConfig.witness) {
-      await this.valueTransferService.initPartyState()
+      await this.didService.createDID({
+        isStatic: true,
+        marker: DidMarker.Queries,
+        endpoint: this.config.endpoints?.length ? this.config.endpoints[0] : undefined,
+      })
     }
 
     this._isInitialized = true
@@ -403,7 +393,6 @@ export class Agent {
       OutOfBandModuleV2,
       OutOfBandModule,
       IndyModule,
-      ValueTransferModule,
       KeysModule,
       ProblemReportModule
     )

@@ -12,13 +12,6 @@ import type { OutOfBandRecord } from './modules/oob/repository'
 import type { AutoAcceptProof } from './modules/proofs'
 import type { MediatorDeliveryStrategy, MediatorPickupStrategy } from './modules/routing'
 import type { Transports } from './modules/routing/types'
-import type { AutoAcceptValueTransfer } from './modules/value-transfer/ValueTransferAutoAcceptType'
-import type {
-  GossipConfig,
-  GossipPlugins,
-  GossipStorageConfig,
-  WitnessDetails,
-} from '@sicpa-dlab/witness-gossip-types-ts'
 
 export enum KeyDerivationMethod {
   /** default value in indy-sdk. Will be used when no value is provided */
@@ -50,26 +43,6 @@ export interface WalletConfigRekey {
 export interface WalletExportImportConfig {
   key: string
   path: string
-}
-
-export interface ValueTransferPartyConfig {
-  witnessDid?: string
-  autoAcceptPaymentOffer?: AutoAcceptValueTransfer
-  autoAcceptOfferedPaymentRequest?: AutoAcceptValueTransfer
-  autoAcceptPaymentRequest?: AutoAcceptValueTransfer
-}
-
-export interface ValueTransferWitnessConfig {
-  wid: string
-  knownWitnesses: WitnessDetails[]
-  gossipConfig?: GossipConfig
-  gossipPlugins?: Partial<GossipPlugins>
-  issuerDids?: string[]
-}
-
-export interface ValueTransferConfig {
-  party?: ValueTransferPartyConfig
-  witness?: ValueTransferWitnessConfig
 }
 
 export type EncryptedMessage = {
@@ -128,13 +101,10 @@ export interface InitConfig {
 
   useLegacyDidSovPrefix?: boolean
   connectionImageUrl?: string
-  valueTransferConfig?: ValueTransferConfig
 
   autoUpdateStorageOnStartup?: boolean
 
   internetChecker?: InternetChecker
-
-  gossipStorageConfig?: GossipStorageConfig
 }
 
 export type PlaintextMessage = PlaintextMessageV1 | PlaintextMessageV2

@@ -34,7 +34,7 @@ export class CentralBankIssuerInquirer extends BaseInquirer {
   }
 
   public static async build(): Promise<CentralBankIssuerInquirer> {
-    const centralBankIssuer = await CentralBankIssuer.build()
+    const centralBankIssuer = await CentralBankIssuer.init()
     return new CentralBankIssuerInquirer(centralBankIssuer)
   }
 
