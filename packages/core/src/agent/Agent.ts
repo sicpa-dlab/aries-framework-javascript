@@ -301,7 +301,11 @@ export class Agent {
 
     const existingQueriesDid = await this.didService.findStaticDid(DidMarker.Queries)
     if (!existingQueriesDid) {
-      await this.didService.createDID({ isStatic: true, marker: DidMarker.Queries })
+      await this.didService.createDID({
+        isStatic: true,
+        marker: DidMarker.Queries,
+        endpoint: this.config.endpoints?.length ? this.config.endpoints[0] : undefined,
+      })
     }
 
     // VTP state initialization

@@ -28,6 +28,7 @@ export { JsonEncoder } from './utils'
 export { sleep } from './utils/sleep'
 export { Attachment } from './decorators/attachment/Attachment'
 export { parseMessageType, IsValidMessageType } from './utils/messageType'
+export { Buffer } from './utils/buffer'
 
 import { parseInvitationUrl } from './utils/parseInvitation'
 import { uuid } from './utils/uuid'

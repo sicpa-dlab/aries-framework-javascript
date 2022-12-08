@@ -9,7 +9,6 @@ import WebSocket from 'ws'
 
 import { NodeFileSystem } from './NodeFileSystem'
 import { IndyPostgresStorageConfig, loadPostgresPlugin, WalletScheme } from './PostgresPlugin'
-import { initWitnessGossip } from './modules/gossip'
 import { HttpInboundTransport } from './transport/HttpInboundTransport'
 import { WsInboundTransport } from './transport/WsInboundTransport'
 
@@ -30,5 +29,4 @@ export {
   loadPostgresPlugin,
   IndyPostgresStorageConfig,
   WalletScheme,
-  initWitnessGossip,
 }

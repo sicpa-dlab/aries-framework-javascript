@@ -10,6 +10,9 @@ import {
   WitnessTableMessage,
 } from '@aries-framework/core'
 
+/*
+ *  Implementation of Transport interface required by Gossip library
+ * */
 @injectable()
 export class GossipTransportService implements OutboundGossipTransportInterface {
   private config: AgentConfig

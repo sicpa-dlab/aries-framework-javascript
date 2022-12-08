@@ -1,8 +1,11 @@
+import type { Buffer } from '@aries-framework/core'
 import type { GossipCryptoInterface } from '@sicpa-dlab/witness-gossip-types-ts'
-import type { Buffer } from 'buffer/'
 
 import { injectable, DidService, KeyService } from '@aries-framework/core'
 
+/*
+ *  Implementation of Crypto operations required by Gossip library
+ * */
 @injectable()
 export class GossipCryptoService implements GossipCryptoInterface {
   private didService: DidService
