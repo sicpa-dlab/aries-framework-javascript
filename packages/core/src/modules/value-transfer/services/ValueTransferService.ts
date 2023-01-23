@@ -356,7 +356,7 @@ export class ValueTransferService {
     const record = await this.valueTransferRepository.getById(id)
     this.eventEmitter.emit<ValueTransferStateChangedEvent>({
       type: ValueTransferEventTypes.ValueTransferStateChanged,
-      payload: { record },
+      payload: { record, currentState: record.state },
     })
     return record
   }
