@@ -2,7 +2,7 @@
   "name": "@sicpa-dlab/aries-framework-node",
   "main": "build/index",
   "types": "build/index",
-  "version": "0.4.12",
+  "version": "0.4.13-beta1",
   "files": [
     "build",
     "bin"
@@ -28,7 +28,7 @@
     "test": "jest"
   },
   "dependencies": {
-    "@aries-framework/core": "npm:@sicpa-dlab/aries-framework-core@0.4.12",
+    "@aries-framework/core": "npm:@sicpa-dlab/aries-framework-core@0.4.13-beta1",
     "@sicpa-dlab/witness-gossip-protocol-ts": "0.3.13",
     "@sicpa-dlab/witness-gossip-types-ts": "0.3.9",
     "@sicpa-dlab/value-transfer-common-ts": "0.3.7",

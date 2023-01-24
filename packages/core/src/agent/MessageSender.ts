@@ -316,19 +316,14 @@ export class MessageSender {
   ): Promise<DidCommV2Service[] | undefined> {
     if (!recipient) return undefined
 
-    const { didDocument: senderDidDocument } = await this.didResolverService.resolve(sender)
-
     const { didDocument: recipientDidDocument } = await this.didResolverService.resolve(recipient)
     if (!recipientDidDocument) {
       throw new AriesFrameworkError(`Unable to resolve did document for did '${recipient}'`)
     }
 
-    const senderServices = senderDidDocument?.service || []
     const recipientServices = recipientDidDocument?.service || []
 
-    const senderTransports = senderServices.length
-      ? senderServices.map((service) => service.protocolScheme)
-      : this.agentConfig.transports // FIXME: use outbound transports
+    const senderTransports = this.outboundTransports.flatMap((transport) => transport.supportedSchemes)
 
     const supportedTransports = priorityTransports?.length
       ? [...priorityTransports, ...senderTransports]
