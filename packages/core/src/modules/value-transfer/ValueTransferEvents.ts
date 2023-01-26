@@ -15,7 +15,7 @@ export interface ValueTransferStateChangedEvent extends BaseEvent {
   payload: {
     record: ValueTransferRecord
     previousState?: TransactionState | null
-    currentState?: TransactionState | null
+    currentState: TransactionState
   }
 }
 

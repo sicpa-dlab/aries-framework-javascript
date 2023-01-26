@@ -137,7 +137,7 @@ export class ValueTransferGiverService {
     await this.valueTransferRepository.update(record)
 
     // Raise event
-    await this.valueTransferService.emitStateChangedEvent(record.id)
+    await this.valueTransferService.emitStateChangedEvent(record.id, record.state)
 
     this.logger.info(`< Giver: offer payment VTP transaction completed!`)
 
@@ -166,7 +166,7 @@ export class ValueTransferGiverService {
       record.transaction = transaction
       await this.valueTransferRepository.update(record)
 
-      const updatedRecord = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+      const updatedRecord = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
       this.logger.info(`< Giver: verify request message for VTP transaction ${record.transaction.id} failed!`)
       return { record: updatedRecord }
     }
@@ -211,7 +211,7 @@ export class ValueTransferGiverService {
     await this.valueTransferRepository.update(record)
 
     // Raise event
-    await this.valueTransferService.emitStateChangedEvent(record.id)
+    await this.valueTransferService.emitStateChangedEvent(record.id, record.state)
 
     this.logger.info(`< Giver: process payment request message for VTP transaction ${requestMessage.id} completed!`)
 
@@ -261,7 +261,7 @@ export class ValueTransferGiverService {
     }
 
     // Raise event
-    const updatedRecord = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const updatedRecord = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(`< Giver: accept payment request message for VTP transaction ${record.transaction.id} completed!`)
 
@@ -295,7 +295,7 @@ export class ValueTransferGiverService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(
       `< Giver: process cash acceptance message for VTP transaction ${cashAcceptedWitnessedMessage.id} completed!`
@@ -331,7 +331,7 @@ export class ValueTransferGiverService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(`< Giver: process receipt message for VTP transaction ${receiptMessage.id} completed!`)
 

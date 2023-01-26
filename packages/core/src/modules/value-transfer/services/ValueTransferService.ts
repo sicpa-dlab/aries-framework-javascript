@@ -1,11 +1,13 @@
-import type { DIDCommV2Message } from '../../../agent/didcomm'
-import type { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
-import type { Logger } from '../../../logger'
-import type { WitnessTableMessage } from '../../gossip'
-import type { Transports } from '../../routing/types'
-import type { ValueTransferStateChangedEvent, WitnessTableReceivedEvent } from '../ValueTransferEvents'
-import type { ProblemReportMessage } from '../messages'
-import type { ValueTransferRecord, ValueTransferTags } from '../repository'
+import type { DIDCommV2Message } from "../../../agent/didcomm";
+import type { InboundMessageContext } from "../../../agent/models/InboundMessageContext";
+import type { Logger } from "../../../logger";
+import type { WitnessTableMessage } from "../../gossip";
+import type { Transports } from "../../routing/types";
+import type { ValueTransferStateChangedEvent, WitnessTableReceivedEvent } from "../ValueTransferEvents";
+import { ValueTransferEventTypes } from "../ValueTransferEvents";
+import type { ProblemReportMessage } from "../messages";
+import type { ValueTransferRecord, ValueTransferTags } from "../repository";
+import { ValueTransferRepository } from "../repository";
 
 import {
   Getter,
@@ -16,32 +18,30 @@ import {
   TransactionState,
   TransactionStatus,
   Wallet,
-  Witness,
-} from '@sicpa-dlab/value-transfer-protocol-ts'
-import { firstValueFrom, ReplaySubject } from 'rxjs'
-import { first, map } from 'rxjs/operators'
+  Witness
+} from "@sicpa-dlab/value-transfer-protocol-ts";
+import { firstValueFrom, ReplaySubject } from "rxjs";
+import { first, map } from "rxjs/operators";
 
-import { AgentConfig } from '../../../agent/AgentConfig'
-import { EventEmitter } from '../../../agent/EventEmitter'
-import { MessageSender } from '../../../agent/MessageSender'
-import { SendingMessageType } from '../../../agent/didcomm/types'
-import { InjectionSymbols } from '../../../constants'
-import { AriesFrameworkError } from '../../../error'
-import { DependencyManager, injectable } from '../../../plugins'
-import { JsonEncoder, timeoutWhen } from '../../../utils'
-import { DidMarker, DidResolverService } from '../../dids'
-import { DidService } from '../../dids/services/DidService'
-import { WitnessTableQueryMessage } from '../../gossip/messages/WitnessTableQueryMessage'
-import { ValueTransferEventTypes } from '../ValueTransferEvents'
-import { ValueTransferRepository } from '../repository'
-import { ValueTransferStateRecord } from '../repository/ValueTransferStateRecord'
-import { ValueTransferStateRepository } from '../repository/ValueTransferStateRepository'
+import { AgentConfig } from "../../../agent/AgentConfig";
+import { EventEmitter } from "../../../agent/EventEmitter";
+import { MessageSender } from "../../../agent/MessageSender";
+import { SendingMessageType } from "../../../agent/didcomm/types";
+import { InjectionSymbols } from "../../../constants";
+import { AriesFrameworkError } from "../../../error";
+import { DependencyManager, injectable } from "../../../plugins";
+import { JsonEncoder, timeoutWhen } from "../../../utils";
+import { DidMarker, DidResolverService } from "../../dids";
+import { DidService } from "../../dids/services/DidService";
+import { WitnessTableQueryMessage } from "../../gossip/messages/WitnessTableQueryMessage";
+import { ValueTransferStateRecord } from "../repository/ValueTransferStateRecord";
+import { ValueTransferStateRepository } from "../repository/ValueTransferStateRepository";
 
-import { ValueTransferCryptoService } from './ValueTransferCryptoService'
-import { ValueTransferLockService } from './ValueTransferLockService'
-import { ValueTransferPartyStateService } from './ValueTransferPartyStateService'
-import { ValueTransferTransportService } from './ValueTransferTransportService'
-import { ValueTransferWitnessStateService } from './ValueTransferWitnessStateService'
+import { ValueTransferCryptoService } from "./ValueTransferCryptoService";
+import { ValueTransferLockService } from "./ValueTransferLockService";
+import { ValueTransferPartyStateService } from "./ValueTransferPartyStateService";
+import { ValueTransferTransportService } from "./ValueTransferTransportService";
+import { ValueTransferWitnessStateService } from "./ValueTransferWitnessStateService";
 
 @injectable()
 export class ValueTransferService {
@@ -173,7 +173,7 @@ export class ValueTransferService {
       await this.giver.processProblemReport(new ProblemReport(problemReportMessage))
     }
 
-    const updatedRecord = await this.emitStateChangedEvent(record.transaction.id)
+    const updatedRecord = await this.emitStateChangedEvent(record.transaction.id, record.state)
     return { record: updatedRecord }
   }
 
@@ -201,7 +201,7 @@ export class ValueTransferService {
       await this.giver.abortTransaction(record.transaction.id, code, reason, send)
     }
 
-    const updatedRecord = await this.emitStateChangedEvent(record.transaction.id)
+    const updatedRecord = await this.emitStateChangedEvent(record.transaction.id, record.state)
     return { record: updatedRecord }
   }
 
@@ -352,11 +352,11 @@ export class ValueTransferService {
     return this.didService.getPublicDid()
   }
 
-  public async emitStateChangedEvent(id: string): Promise<ValueTransferRecord> {
+  public async emitStateChangedEvent(id: string, currentState: TransactionState): Promise<ValueTransferRecord> {
     const record = await this.valueTransferRepository.getById(id)
     this.eventEmitter.emit<ValueTransferStateChangedEvent>({
       type: ValueTransferEventTypes.ValueTransferStateChanged,
-      payload: { record, currentState: record.state },
+      payload: { record, currentState: currentState },
     })
     return record
   }

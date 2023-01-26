@@ -1,23 +1,30 @@
-import type { InboundMessageContext } from '../../../agent/models/InboundMessageContext'
-import type { Logger } from '../../../logger'
-import type { ResumeValueTransferTransactionEvent } from '../ValueTransferEvents'
-import type { CashAcceptedMessage, CashRemovedMessage, RequestAcceptedMessage } from '../messages'
-import type { MintMessage } from '../messages/MintMessage'
-import type { ValueTransferRecord } from '../repository'
+import type { InboundMessageContext } from "../../../agent/models/InboundMessageContext";
+import type { Logger } from "../../../logger";
+import type { ResumeValueTransferTransactionEvent } from "../ValueTransferEvents";
+import { ValueTransferEventTypes } from "../ValueTransferEvents";
+import type { CashAcceptedMessage, CashRemovedMessage, RequestAcceptedMessage } from "../messages";
+import type { MintMessage } from "../messages/MintMessage";
+import type { ValueTransferRecord } from "../repository";
 
-import { Witness, RequestAcceptance, CashRemoval, CashAcceptance, Mint } from '@sicpa-dlab/value-transfer-protocol-ts'
+import {
+  CashAcceptance,
+  CashRemoval,
+  Mint,
+  RequestAcceptance,
+  TransactionState,
+  Witness
+} from "@sicpa-dlab/value-transfer-protocol-ts";
 
-import { AgentConfig } from '../../../agent/AgentConfig'
-import { EventEmitter } from '../../../agent/EventEmitter'
-import { InjectionSymbols } from '../../../constants'
-import { injectable, DependencyManager } from '../../../plugins'
-import { ValueTransferEventTypes } from '../ValueTransferEvents'
-import { MintResponseMessage } from '../messages/MintResponseMessage'
+import { AgentConfig } from "../../../agent/AgentConfig";
+import { EventEmitter } from "../../../agent/EventEmitter";
+import { InjectionSymbols } from "../../../constants";
+import { DependencyManager, injectable } from "../../../plugins";
+import { MintResponseMessage } from "../messages/MintResponseMessage";
 
-import { ValueTransferCryptoService } from './ValueTransferCryptoService'
-import { ValueTransferService } from './ValueTransferService'
-import { ValueTransferTransportService } from './ValueTransferTransportService'
-import { ValueTransferWitnessStateService } from './ValueTransferWitnessStateService'
+import { ValueTransferCryptoService } from "./ValueTransferCryptoService";
+import { ValueTransferService } from "./ValueTransferService";
+import { ValueTransferTransportService } from "./ValueTransferTransportService";
+import { ValueTransferWitnessStateService } from "./ValueTransferWitnessStateService";
 
 @injectable()
 export class ValueTransferWitnessService {
@@ -94,7 +101,7 @@ export class ValueTransferWitnessService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(
       `< Witness ${this.label}: process request acceptance message for VTP transaction ${requestAcceptanceMessage.id} completed!`
@@ -131,7 +138,7 @@ export class ValueTransferWitnessService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(
       `< Witness ${this.label}: process cash acceptance message for VTP transaction ${cashAcceptedMessage.id} completed!`
@@ -171,7 +178,7 @@ export class ValueTransferWitnessService {
     }
 
     // Raise event
-    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id)
+    const record = await this.valueTransferService.emitStateChangedEvent(transaction.id, transaction.state)
 
     this.logger.info(
       `< Witness ${this.label}: process cash removal message for VTP transaction ${cashRemovedMessage.id} completed!`
